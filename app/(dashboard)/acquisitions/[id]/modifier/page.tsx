@@ -1,12 +1,12 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Package } from 'lucide-react'
 
 // ─── Server action ────────────────────────────────────────────
 
-async function createAcquisition(formData: FormData) {
+async function updateAcquisition(id: number, formData: FormData) {
   'use server'
 
   const code       = (formData.get('code') as string).trim()
@@ -15,13 +15,16 @@ async function createAcquisition(formData: FormData) {
   const montant    = parseFloat(formData.get('montant') as string)
   const nombreLots = parseInt(formData.get('nombreLots') as string)
 
-  // Check uniqueness
-  const existing = await prisma.acquisition.findUnique({ where: { code } })
+  // Check code uniqueness (excluding current record)
+  const existing = await prisma.acquisition.findFirst({
+    where: { code, NOT: { id } },
+  })
   if (existing) {
-    redirect(`/acquisitions/nouveau?error=Code+déjà+utilisé`)
+    redirect(`/acquisitions/${id}/modifier?error=Code+déjà+utilisé`)
   }
 
-  await prisma.acquisition.create({
+  await prisma.acquisition.update({
+    where: { id },
     data: {
       code,
       type: type as any,
@@ -30,28 +33,38 @@ async function createAcquisition(formData: FormData) {
       nombreLots,
     },
   })
-  redirect('/acquisitions?created=1')
+  redirect(`/acquisitions/${id}?updated=1`)
 }
 
 // ─── Page ─────────────────────────────────────────────────────
 
-export default async function NouvelleAcquisitionPage({
+export default async function ModifierAcquisitionPage({
+  params,
   searchParams,
 }: {
+  params: { id: string }
   searchParams: { error?: string }
 }) {
+  const id = parseInt(params.id)
+  if (isNaN(id)) notFound()
+
+  const acquisition = await prisma.acquisition.findUnique({ where: { id } })
+  if (!acquisition) notFound()
+
+  const action = updateAcquisition.bind(null, id)
+
   return (
     <>
-      <Header title="Ajouter une acquisition" />
+      <Header title="Modifier une acquisition" />
       <main className="flex-1 p-6">
 
         {/* Breadcrumb */}
         <Link
-          href="/acquisitions"
+          href={`/acquisitions/${id}`}
           className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-5 group"
         >
           <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
-          Retour aux acquisitions
+          Retour aux détails
         </Link>
 
         <div className="max-w-xl">
@@ -65,23 +78,23 @@ export default async function NouvelleAcquisitionPage({
           <div className="card">
             {/* Card header */}
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-              <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
-                <Package size={20} className="text-green-700" />
+              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <Package size={20} className="text-amber-600" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Nouvelle acquisition</h2>
-                <p className="text-xs text-gray-400">Renseignez les informations de l&apos;acquisition</p>
+                <h2 className="text-lg font-bold text-gray-900">Modifier l&apos;acquisition</h2>
+                <p className="text-xs text-gray-400 font-mono">{acquisition.code}</p>
               </div>
             </div>
 
-            <form action={createAcquisition} className="space-y-5">
+            <form action={action} className="space-y-5">
 
               {/* Type */}
               <div>
                 <label className="label" htmlFor="type">
                   Type d&apos;acquisition <span className="text-red-500">*</span>
                 </label>
-                <select id="type" name="type" required className="input">
+                <select id="type" name="type" required className="input" defaultValue={acquisition.type}>
                   <option value="MARCHE">Marché</option>
                   <option value="BON_DE_COMMANDE">Bon de commande</option>
                   <option value="DON">Don</option>
@@ -101,6 +114,7 @@ export default async function NouvelleAcquisitionPage({
                   placeholder="ACQ-2024-001"
                   pattern="[A-Za-z0-9\-]+"
                   title="Lettres, chiffres et tirets uniquement"
+                  defaultValue={acquisition.code}
                 />
                 <p className="mt-1 text-[11px] text-gray-400">Identifiant unique de l&apos;acquisition</p>
               </div>
@@ -116,7 +130,7 @@ export default async function NouvelleAcquisitionPage({
                   type="date"
                   required
                   className="input"
-                  defaultValue={new Date().toISOString().split('T')[0]}
+                  defaultValue={acquisition.date.toISOString().split('T')[0]}
                 />
               </div>
 
@@ -136,6 +150,7 @@ export default async function NouvelleAcquisitionPage({
                       required
                       className="input pr-14"
                       placeholder="0.00"
+                      defaultValue={acquisition.montant}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium">
                       MAD
@@ -155,6 +170,7 @@ export default async function NouvelleAcquisitionPage({
                     required
                     className="input"
                     placeholder="1"
+                    defaultValue={acquisition.nombreLots}
                   />
                 </div>
               </div>
@@ -162,9 +178,9 @@ export default async function NouvelleAcquisitionPage({
               {/* Buttons */}
               <div className="flex gap-3 pt-2 border-t border-gray-100">
                 <button type="submit" className="btn-primary flex-1 justify-center">
-                  Valider
+                  Enregistrer les modifications
                 </button>
-                <Link href="/acquisitions" className="btn-secondary flex-1 justify-center">
+                <Link href={`/acquisitions/${id}`} className="btn-secondary flex-1 justify-center">
                   Annuler
                 </Link>
               </div>
