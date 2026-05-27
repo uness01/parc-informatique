@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── USERS & AUTH ─────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  GESTIONNAIRE
+  TECHNICIEN
+  CONSULTANT
+}
+
+model Utilisateur {
+  id            Int      @id @default(autoincrement())
+  nom           String
+  prenom        String
+  email         String   @unique
+  password      String
+  role          Role     @default(CONSULTANT)
+  actif         Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  affectations  Affectation[]
+  pannes        Panne[]
+  reparations   Reparation[]
+}
+
+// ─── ACQUISITION ──────────────────────────────────────────────
+
+enum TypeAcquisition {
+  MARCHE
+  BON_DE_COMMANDE
+  DON
+}
+
+model Acquisition {
+  id            Int              @id @default(autoincrement())
+  type          TypeAcquisition
+  code          String           @unique
+  date          DateTime
+  montant       Float
+  nombreLots    Int
+  createdAt     DateTime         @default(now())
+
+  lots          Lot[]
+}
+
+// ─── SOCIETE ──────────────────────────────────────────────────
+
+model Societe {
+  id            Int      @id @default(autoincrement())
+  nom           String
+  telephone     String?
+  fax           String?
+  email         String?
+  adresse       String?
+  createdAt     DateTime @default(now())
+
+  lots          Lot[]
+  reparations   Reparation[]
+}
+
+// ─── LOT ──────────────────────────────────────────────────────
+
+model Lot {
+  id            Int         @id @default(autoincrement())
+  numero        String
+  nom           String
+  montant       Float
+  nombreArticles Int
+
+  acquisitionId Int
+  acquisition   Acquisition @relation(fields: [acquisitionId], references: [id])
+
+  societeId     Int
+  societe       Societe     @relation(fields: [societeId], references: [id])
+
+  createdAt     DateTime    @default(now())
+
+  articles      Article[]
+  livraisons    Livraison[]
+}
+
+// ─── ARTICLE ──────────────────────────────────────────────────
+
+model Article {
+  id              Int      @id @default(autoincrement())
+  numero          String
+  designation     String
+  marque          String
+  modele          String
+  nombreMateriel  Int
+  prixUnitaire    Float
+  dateFinGarantie DateTime?
+
+  lotId           Int
+  lot             Lot      @relation(fields: [lotId], references: [id])
+
+  createdAt       DateTime @default(now())
+
+  caracteristiques Caracteristique[]
+  materiels        Materiel[]
+}
+
+// ─── CARACTERISTIQUE ──────────────────────────────────────────
+
+model Caracteristique {
+  id        Int     @id @default(autoincrement())
+  nom       String
+  valeur    String
+
+  articleId Int
+  article   Article @relation(fields: [articleId], references: [id])
+}
+
+// ─── LIVRAISON ────────────────────────────────────────────────
+
+model Livraison {
+  id            Int      @id @default(autoincrement())
+  numeroBL      String
+  dateLivraison DateTime
+
+  lotId         Int
+  lot           Lot      @relation(fields: [lotId], references: [id])
+
+  createdAt     DateTime @default(now())
+
+  materiels     Materiel[]
+}
+
+// ─── MATERIEL ─────────────────────────────────────────────────
+
+enum StatutMateriel {
+  DISPONIBLE
+  AFFECTE
+  EN_REPARATION
+  REFORME
+  PERDU
+}
+
+model Materiel {
+  id               Int            @id @default(autoincrement())
+  numeroInventaire String         @unique
+  numeroSerie      String?        @unique
+  statut           StatutMateriel @default(DISPONIBLE)
+  dateFinGarantie  DateTime?
+
+  articleId        Int
+  article          Article        @relation(fields: [articleId], references: [id])
+
+  livraisonId      Int
+  livraison        Livraison      @relation(fields: [livraisonId], references: [id])
+
+  createdAt        DateTime       @default(now())
+
+  affectations     Affectation[]
+  etats            EtatMateriel[]
+  pannes           Panne[]
+}
+
+// ─── AFFECTATION ──────────────────────────────────────────────
+
+enum EtatRetour {
+  BON
+  MAUVAIS
+  MOYEN
+}
+
+model Affectation {
+  id            Int        @id @default(autoincrement())
+  dateDebut     DateTime
+  dateFin       DateTime?
+  direction     String
+  entite        String
+  batiment      String?
+  etage         String?
+  bureau        String?
+  commentaire   String?
+  etatRetour    EtatRetour?
+
+  materielId    Int
+  materiel      Materiel   @relation(fields: [materielId], references: [id])
+
+  utilisateurId Int
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+
+  createdAt     DateTime   @default(now())
+}
+
+// ─── ETAT MATERIEL ────────────────────────────────────────────
+
+enum EtatType {
+  DISPONIBLE
+  AFFECTE
+  EN_REPARATION
+  REFORME
+  PERDU
+}
+
+model EtatMateriel {
+  id          Int      @id @default(autoincrement())
+  etat        EtatType
+  dateDebut   DateTime
+  dateFin     DateTime?
+  commentaire String?
+
+  materielId  Int
+  materiel    Materiel @relation(fields: [materielId], references: [id])
+}
+
+// ─── PANNE ────────────────────────────────────────────────────
+
+enum Priorite {
+  BASSE
+  MOYENNE
+  HAUTE
+  CRITIQUE
+}
+
+enum StatutPanne {
+  OUVERTE
+  EN_COURS
+  RESOLUE
+  FERMEE
+}
+
+model Panne {
+  id            Int         @id @default(autoincrement())
+  description   String
+  priorite      Priorite    @default(MOYENNE)
+  date          DateTime    @default(now())
+  statut        StatutPanne @default(OUVERTE)
+
+  materielId    Int
+  materiel      Materiel    @relation(fields: [materielId], references: [id])
+
+  utilisateurId Int
+  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+
+  createdAt     DateTime    @default(now())
+
+  reparations   Reparation[]
+}
+
+// ─── REPARATION ───────────────────────────────────────────────
+
+enum TypeMaintenance {
+  CORRECTIVE
+  PREVENTIVE
+}
+
+enum StatutReparation {
+  EN_COURS
+  TERMINEE
+  ANNULEE
+}
+
+model Reparation {
+  id              Int              @id @default(autoincrement())
+  codeBon         String           @unique
+  typeMaintenance TypeMaintenance
+  dateDebut       DateTime
+  dateFin         DateTime?
+  cout            Float?
+  rapport         String?
+  statut          StatutReparation @default(EN_COURS)
+
+  panneId         Int
+  panne           Panne            @relation(fields: [panneId], references: [id])
+
+  technicienId    Int
+  technicien      Utilisateur      @relation(fields: [technicienId], references: [id])
+
+  societeId       Int
+  societe         Societe          @relation(fields: [societeId], references: [id])
+
+  createdAt       DateTime         @default(now())
+}
