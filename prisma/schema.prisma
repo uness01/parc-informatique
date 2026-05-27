@@ -126,6 +126,7 @@ model Livraison {
   id            Int      @id @default(autoincrement())
   numeroBL      String
   dateLivraison DateTime
+  articleLivre  Boolean  @default(false)
 
   lotId         Int
   lot           Lot      @relation(fields: [lotId], references: [id])
