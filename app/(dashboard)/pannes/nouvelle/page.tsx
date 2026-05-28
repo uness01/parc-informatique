@@ -1,103 +1,73 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import { PRIORITE_LABELS } from '@/lib/utils'
-
-async function createPanne(formData: FormData) {
-  'use server'
-  const materielId = Number(formData.get('materielId'))
-  const utilisateurId = Number(formData.get('utilisateurId'))
-
-  await prisma.$transaction([
-    prisma.panne.create({
-      data: {
-        materielId,
-        utilisateurId,
-        description: formData.get('description') as string,
-        priorite: formData.get('priorite') as any,
-        statut: 'OUVERTE',
-      },
-    }),
-    prisma.materiel.update({
-      where: { id: materielId },
-      data: { statut: 'EN_REPARATION' },
-    }),
-  ])
-  redirect('/pannes')
-}
+import { ArrowLeft, Wrench } from 'lucide-react'
+import { PanneForm } from '@/components/PanneForm'
 
 export default async function NouvellePannePage({
   searchParams,
 }: {
   searchParams: { materielId?: string }
 }) {
+  const defaultMaterielId = searchParams.materielId ? Number(searchParams.materielId) : undefined
+
   const [materiels, utilisateurs] = await Promise.all([
     prisma.materiel.findMany({
-      include: { article: true },
+      include: { article: { select: { designation: true, marque: true } } },
       orderBy: { numeroInventaire: 'asc' },
     }),
     prisma.utilisateur.findMany({
-      where: { actif: true },
-      orderBy: [{ nom: 'asc' }],
+      where:   { actif: true },
+      orderBy: [{ nom: 'asc' }, { prenom: 'asc' }],
+      select:  { id: true, nom: true, prenom: true },
     }),
   ])
+
+  const materielOptions = materiels.map((m) => ({
+    id:               m.id,
+    numeroInventaire: m.numeroInventaire,
+    article: {
+      designation: m.article.designation,
+      marque:      m.article.marque,
+    },
+  }))
 
   return (
     <>
       <Header title="Déclarer une panne" />
       <main className="flex-1 p-6">
-        <Link href="/pannes" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4">
-          <ArrowLeft size={16} />
-          Retour
+
+        <Link
+          href="/pannes"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-5 group"
+        >
+          <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
+          Retour aux pannes
         </Link>
+
         <div className="max-w-2xl">
           <div className="card">
-            <h2 className="text-lg font-bold text-gray-900 mb-5">Déclarer une panne</h2>
-            <form action={createPanne} className="space-y-4">
-              <div>
-                <label className="label">Matériel concerné *</label>
-                <select name="materielId" required defaultValue={searchParams.materielId ?? ''} className="input">
-                  <option value="">Sélectionner un matériel</option>
-                  {materiels.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.numeroInventaire} — {m.article.designation} ({m.article.marque})
-                    </option>
-                  ))}
-                </select>
+
+            {/* Card header */}
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                <Wrench size={20} className="text-red-500" />
               </div>
               <div>
-                <label className="label">Déclaré par *</label>
-                <select name="utilisateurId" required className="input">
-                  <option value="">Sélectionner un utilisateur</option>
-                  {utilisateurs.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.prenom} {u.nom}
-                    </option>
-                  ))}
-                </select>
+                <h2 className="text-lg font-bold text-gray-900">Déclarer une panne</h2>
+                <p className="text-xs text-gray-400">Enregistrer un incident ou dysfonctionnement matériel</p>
               </div>
-              <div>
-                <label className="label">Description *</label>
-                <textarea name="description" required rows={4} className="input"
-                  placeholder="Décrivez le problème constaté..."></textarea>
-              </div>
-              <div>
-                <label className="label">Priorité *</label>
-                <select name="priorite" required defaultValue="MOYENNE" className="input">
-                  {Object.entries(PRIORITE_LABELS).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button type="submit" className="btn-primary">Enregistrer</button>
-                <Link href="/pannes" className="btn-secondary">Annuler</Link>
-              </div>
-            </form>
+            </div>
+
+            <PanneForm
+              materiels={materielOptions}
+              utilisateurs={utilisateurs}
+              defaultMaterielId={defaultMaterielId}
+            />
+
           </div>
         </div>
+
       </main>
     </>
   )

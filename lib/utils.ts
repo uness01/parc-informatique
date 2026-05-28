@@ -54,9 +54,9 @@ export const PRIORITE_LABELS: Record<string, string> = {
 }
 
 export const PRIORITE_COLORS: Record<string, string> = {
-  BASSE: 'bg-gray-100 text-gray-700',
-  MOYENNE: 'bg-yellow-100 text-yellow-800',
-  HAUTE: 'bg-orange-100 text-orange-800',
+  BASSE:    'bg-gray-100 text-gray-700',
+  MOYENNE:  'bg-blue-100 text-blue-800',
+  HAUTE:    'bg-orange-100 text-orange-800',
   CRITIQUE: 'bg-red-100 text-red-800',
 }
 
