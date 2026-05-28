@@ -2,10 +2,16 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { canDo, getSessionRole } from '@/lib/permissions'
 
 export async function deleteAcquisition(
   id: number
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'acquisitions', 'supprimer')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const lotsCount = await prisma.lot.count({ where: { acquisitionId: id } })
     if (lotsCount > 0) {

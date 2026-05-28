@@ -1,9 +1,16 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, Phone, Mail } from 'lucide-react'
+import { canDo } from '@/lib/permissions'
 
 export default async function SocietesPage() {
+  const session = await getServerSession(authOptions)
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
+  const canAjouter = canDo(role, 'societes', 'ajouter')
+
   const societes = await prisma.societe.findMany({
     include: {
       _count: { select: { lots: true, reparations: true } },
@@ -17,10 +24,12 @@ export default async function SocietesPage() {
       <main className="flex-1 p-6 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">{societes.length} société(s)</p>
-          <Link href="/societes/nouvelle" className="btn-primary">
-            <Plus size={16} />
-            Nouvelle société
-          </Link>
+          {canAjouter && (
+            <Link href="/societes/nouvelle" className="btn-primary">
+              <Plus size={16} />
+              Nouvelle société
+            </Link>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

@@ -1,9 +1,12 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { STATUT_MATERIEL_LABELS } from '@/lib/utils'
 import { AffectationsTable } from '@/components/AffectationsTable'
+import { canDo } from '@/lib/permissions'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -28,6 +31,11 @@ export default async function AffectationsPage({
 }: {
   searchParams: SearchParams
 }) {
+  const session = await getServerSession(authOptions)
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
+  const canAjouter  = canDo(role, 'affectations', 'ajouter')
+  const canModifier = canDo(role, 'affectations', 'modifier')
+
   const {
     numeroInventaire, numeroSerie, acquisitionId, lotId,
     articleId, designation, marque, modele,
@@ -164,10 +172,12 @@ export default async function AffectationsPage({
               )}
             </p>
           </div>
-          <Link href="/affectations/nouvelle" className="btn-primary flex-shrink-0">
-            <Plus size={15} />
-            Nouvelle affectation
-          </Link>
+          {canAjouter && (
+            <Link href="/affectations/nouvelle" className="btn-primary flex-shrink-0">
+              <Plus size={15} />
+              Nouvelle affectation
+            </Link>
+          )}
         </div>
 
         {/* ── Filter bar ───────────────────────────────── */}
@@ -289,7 +299,7 @@ export default async function AffectationsPage({
         </div>
 
         {/* ── Table ────────────────────────────────────── */}
-        <AffectationsTable data={rows} />
+        <AffectationsTable data={rows} canModifier={canModifier} />
 
       </main>
     </>

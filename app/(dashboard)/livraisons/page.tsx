@@ -1,9 +1,12 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { TYPE_ACQUISITION_LABELS } from '@/lib/utils'
 import { LivraisonsTable } from '@/components/LivraisonsTable'
+import { canDo } from '@/lib/permissions'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -22,6 +25,12 @@ export default async function LivraisonsPage({
 }: {
   searchParams: SearchParams
 }) {
+  const session = await getServerSession(authOptions)
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
+  const canAjouter   = canDo(role, 'livraisons', 'ajouter')
+  const canModifier  = canDo(role, 'livraisons', 'modifier')
+  const canSupprimer = canDo(role, 'livraisons', 'supprimer')
+
   const { typeAcq, code, dateDebut, dateFin, articleLivre } = searchParams
   const hasFilters = !!(typeAcq || code || dateDebut || dateFin || articleLivre)
 
@@ -108,10 +117,12 @@ export default async function LivraisonsPage({
               )}
             </p>
           </div>
-          <Link href="/livraisons/nouveau" className="btn-primary flex-shrink-0">
-            <Plus size={15} />
-            Ajouter une livraison
-          </Link>
+          {canAjouter && (
+            <Link href="/livraisons/nouveau" className="btn-primary flex-shrink-0">
+              <Plus size={15} />
+              Ajouter une livraison
+            </Link>
+          )}
         </div>
 
         {/* ── Filter bar ───────────────────────────────── */}
@@ -195,7 +206,7 @@ export default async function LivraisonsPage({
         </div>
 
         {/* ── Table ────────────────────────────────────── */}
-        <LivraisonsTable data={rows} />
+        <LivraisonsTable data={rows} canModifier={canModifier} canSupprimer={canSupprimer} />
 
       </main>
     </>

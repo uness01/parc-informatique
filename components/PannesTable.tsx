@@ -68,7 +68,15 @@ function StatutBadgeSelect({ panneId, initialStatut }: { panneId: number; initia
 
 // ─── Main component ───────────────────────────────────────────
 
-export function PannesTable({ data }: { data: PanneRow[] }) {
+export function PannesTable({
+  data,
+  canModifier  = true,
+  canSupprimer = true,
+}: {
+  data: PanneRow[]
+  canModifier?:  boolean
+  canSupprimer?: boolean
+}) {
   const [confirmId,  setConfirmId]  = useState<number | null>(null)
   const [errorMsg,   setErrorMsg]   = useState<string | null>(null)
   const [isPending,  startTransition] = useTransition()
@@ -99,9 +107,11 @@ export function PannesTable({ data }: { data: PanneRow[] }) {
         <Wrench size={44} className="opacity-20" />
         <p className="text-sm font-medium">Aucune panne trouvée</p>
         <p className="text-xs">Modifiez vos filtres ou déclarez une panne</p>
-        <Link href="/pannes/nouvelle" className="btn-primary mt-2">
-          + Déclarer une panne
-        </Link>
+        {canModifier && (
+          <Link href="/pannes/nouvelle" className="btn-primary mt-2">
+            + Déclarer une panne
+          </Link>
+        )}
       </div>
     )
   }
@@ -190,12 +200,18 @@ export function PannesTable({ data }: { data: PanneRow[] }) {
 
                     {/* Statut (clickable badge-select) */}
                     <td className="px-3 py-3.5 text-center">
-                      <StatutBadgeSelect panneId={p.id} initialStatut={p.statut} />
+                      {canModifier ? (
+                        <StatutBadgeSelect panneId={p.id} initialStatut={p.statut} />
+                      ) : (
+                        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUT_PANNE_COLORS[p.statut] ?? 'bg-gray-100 text-gray-700'}`}>
+                          {STATUT_PANNE_LABELS[p.statut] ?? p.statut}
+                        </span>
+                      )}
                     </td>
 
                     {/* Actions */}
                     <td className="px-3 py-3.5" onClick={(e) => e.stopPropagation()}>
-                      {isConfirm ? (
+                      {isConfirm && canSupprimer ? (
                         <div className="flex items-center justify-end gap-1.5 bg-red-50 border border-red-200 rounded-lg px-2 py-1.5">
                           <AlertCircle size={12} className="text-red-500 flex-shrink-0" />
                           <span className="text-xs font-semibold text-red-700 whitespace-nowrap">Supprimer ?</span>
@@ -224,14 +240,16 @@ export function PannesTable({ data }: { data: PanneRow[] }) {
                             <Eye size={13} />
                             <span className="hidden xl:inline">Voir</span>
                           </Link>
-                          <button
-                            onClick={(e) => handleDeleteClick(e, p.id)}
-                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={13} />
-                            <span className="hidden xl:inline">Supprimer</span>
-                          </button>
+                          {canSupprimer && (
+                            <button
+                              onClick={(e) => handleDeleteClick(e, p.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={13} />
+                              <span className="hidden xl:inline">Supprimer</span>
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>

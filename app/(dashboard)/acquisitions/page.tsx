@@ -1,9 +1,12 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { formatCurrency, TYPE_ACQUISITION_LABELS } from '@/lib/utils'
 import { AcquisitionsTable } from '@/components/AcquisitionsTable'
+import { canDo } from '@/lib/permissions'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -21,6 +24,12 @@ export default async function AcquisitionsPage({
 }: {
   searchParams: SearchParams
 }) {
+  const session = await getServerSession(authOptions)
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
+  const canAjouter  = canDo(role, 'acquisitions', 'ajouter')
+  const canModifier = canDo(role, 'acquisitions', 'modifier')
+  const canSupprimer = canDo(role, 'acquisitions', 'supprimer')
+
   const { type, code, dateDebut, dateFin } = searchParams
   const hasFilters = !!(type || code || dateDebut || dateFin)
 
@@ -82,10 +91,12 @@ export default async function AcquisitionsPage({
               )}
             </p>
           </div>
-          <Link href="/acquisitions/nouveau" className="btn-primary flex-shrink-0">
-            <Plus size={15} />
-            Ajouter une acquisition
-          </Link>
+          {canAjouter && (
+            <Link href="/acquisitions/nouveau" className="btn-primary flex-shrink-0">
+              <Plus size={15} />
+              Ajouter une acquisition
+            </Link>
+          )}
         </div>
 
         {/* ── Filter bar ───────────────────────────────── */}
@@ -159,7 +170,7 @@ export default async function AcquisitionsPage({
         </div>
 
         {/* ── Table (client component) ─────────────────── */}
-        <AcquisitionsTable data={rows} />
+        <AcquisitionsTable data={rows} canModifier={canModifier} canSupprimer={canSupprimer} />
 
       </main>
     </>

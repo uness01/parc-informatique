@@ -1,8 +1,11 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { ArticlesTable } from '@/components/ArticlesTable'
+import { canDo } from '@/lib/permissions'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -19,6 +22,12 @@ export default async function ArticlesPage({
 }: {
   searchParams: SearchParams
 }) {
+  const session = await getServerSession(authOptions)
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
+  const canAjouter   = canDo(role, 'articles', 'ajouter')
+  const canModifier  = canDo(role, 'articles', 'modifier')
+  const canSupprimer = canDo(role, 'articles', 'supprimer')
+
   const { lotId, designation, marque } = searchParams
   const hasFilters = !!(lotId || designation || marque)
 
@@ -76,10 +85,12 @@ export default async function ArticlesPage({
               )}
             </p>
           </div>
-          <Link href="/articles/nouveau" className="btn-primary flex-shrink-0">
-            <Plus size={15} />
-            Ajouter un article
-          </Link>
+          {canAjouter && (
+            <Link href="/articles/nouveau" className="btn-primary flex-shrink-0">
+              <Plus size={15} />
+              Ajouter un article
+            </Link>
+          )}
         </div>
 
         {/* ── Filter bar ───────────────────────────────── */}
@@ -142,7 +153,7 @@ export default async function ArticlesPage({
         </div>
 
         {/* ── Table ────────────────────────────────────── */}
-        <ArticlesTable data={rows} />
+        <ArticlesTable data={rows} canModifier={canModifier} canSupprimer={canSupprimer} />
 
       </main>
     </>

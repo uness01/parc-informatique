@@ -39,16 +39,24 @@ const ETAT_RETOUR_COLORS: Record<string, string> = {
 
 // ─── Component ────────────────────────────────────────────────
 
-export function AffectationsTable({ data }: { data: AffectationRow[] }) {
+export function AffectationsTable({
+  data,
+  canModifier = true,
+}: {
+  data: AffectationRow[]
+  canModifier?: boolean
+}) {
   if (data.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
         <Users size={44} className="opacity-20" />
         <p className="text-sm font-medium">Aucune affectation trouvée</p>
         <p className="text-xs">Modifiez vos filtres ou créez une affectation</p>
-        <Link href="/affectations/nouvelle" className="btn-primary mt-2">
-          + Nouvelle affectation
-        </Link>
+        {canModifier && (
+          <Link href="/affectations/nouvelle" className="btn-primary mt-2">
+            + Nouvelle affectation
+          </Link>
+        )}
       </div>
     )
   }
@@ -174,7 +182,7 @@ export function AffectationsTable({ data }: { data: AffectationRow[] }) {
                         <Eye size={13} />
                         <span className="hidden xl:inline">Voir</span>
                       </Link>
-                      {enCours && (
+                      {enCours && canModifier && (
                         <Link
                           href={`/affectations/${a.id}`}
                           className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-orange-600 hover:bg-orange-50 transition-colors"

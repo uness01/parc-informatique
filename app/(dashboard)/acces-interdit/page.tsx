@@ -1,30 +1,45 @@
 import Link from 'next/link'
-import { ShieldOff, ArrowLeft } from 'lucide-react'
+import { ShieldOff, LayoutDashboard } from 'lucide-react'
 
 export default function AccesInterditPage() {
   return (
     <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-      <div className="w-20 h-20 rounded-2xl bg-red-50 flex items-center justify-center mb-6">
-        <ShieldOff size={36} className="text-red-400" />
+
+      {/* Icon */}
+      <div className="relative mb-8">
+        <div className="w-24 h-24 rounded-3xl bg-red-50 flex items-center justify-center">
+          <ShieldOff size={44} className="text-red-400" />
+        </div>
+        <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 flex items-center justify-center shadow-md">
+          <span className="text-white text-xs font-black">!</span>
+        </div>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Accès refusé</h1>
-      <p className="text-sm text-gray-500 max-w-sm mb-6">
-        Vous n&apos;avez pas les permissions nécessaires pour accéder à cette page.
-        Veuillez contacter un administrateur.
+      {/* Code */}
+      <p className="text-[80px] font-black leading-none text-red-100 select-none mb-2">
+        403
       </p>
 
-      <div className="flex gap-3">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-700 text-white text-sm font-medium hover:bg-green-800 transition-colors"
-        >
-          <ArrowLeft size={15} />
-          Retour au tableau de bord
-        </Link>
-      </div>
+      {/* Title */}
+      <h1 className="text-2xl font-bold text-gray-900 mb-3">
+        Accès refusé
+      </h1>
 
-      <p className="mt-8 text-xs text-gray-300">Erreur 403 — Accès interdit</p>
+      {/* Message */}
+      <p className="text-sm text-gray-500 max-w-xs mb-8 leading-relaxed">
+        Vous n&apos;avez pas l&apos;autorisation d&apos;accéder à cette page.
+        Veuillez contacter un administrateur si vous pensez qu&apos;il s&apos;agit d&apos;une erreur.
+      </p>
+
+      {/* CTA */}
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-700 text-white text-sm font-semibold hover:bg-green-800 transition-colors shadow-sm"
+      >
+        <LayoutDashboard size={15} />
+        Retour au tableau de bord
+      </Link>
+
     </main>
   )
 }

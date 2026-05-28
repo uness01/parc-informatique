@@ -31,7 +31,15 @@ const ACQ_TYPE_BADGE: Record<string, string> = {
 
 // ─── Component ────────────────────────────────────────────────
 
-export function LotsTable({ data }: { data: LotRow[] }) {
+export function LotsTable({
+  data,
+  canModifier  = true,
+  canSupprimer = true,
+}: {
+  data: LotRow[]
+  canModifier?:  boolean
+  canSupprimer?: boolean
+}) {
   const [confirmId,  setConfirmId]  = useState<number | null>(null)
   const [errorMsg,   setErrorMsg]   = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -61,9 +69,11 @@ export function LotsTable({ data }: { data: LotRow[] }) {
         <Layers size={44} className="opacity-20" />
         <p className="text-sm font-medium">Aucun lot trouvé</p>
         <p className="text-xs">Modifiez vos filtres ou ajoutez un lot</p>
-        <Link href="/lots/nouveau" className="btn-primary mt-2">
-          + Ajouter un lot
-        </Link>
+        {canModifier && (
+          <Link href="/lots/nouveau" className="btn-primary mt-2">
+            + Ajouter un lot
+          </Link>
+        )}
       </div>
     )
   }
@@ -214,22 +224,26 @@ export function LotsTable({ data }: { data: LotRow[] }) {
                             <Eye size={13} />
                             <span className="hidden lg:inline">Détails</span>
                           </Link>
-                          <Link
-                            href={`/lots/${lot.id}/modifier`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
-                            title="Modifier"
-                          >
-                            <Pencil size={13} />
-                            <span className="hidden lg:inline">Modifier</span>
-                          </Link>
-                          <button
-                            onClick={(e) => handleDeleteClick(e, lot.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={13} />
-                            <span className="hidden lg:inline">Supprimer</span>
-                          </button>
+                          {canModifier && (
+                            <Link
+                              href={`/lots/${lot.id}/modifier`}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
+                              title="Modifier"
+                            >
+                              <Pencil size={13} />
+                              <span className="hidden lg:inline">Modifier</span>
+                            </Link>
+                          )}
+                          {canSupprimer && (
+                            <button
+                              onClick={(e) => handleDeleteClick(e, lot.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={13} />
+                              <span className="hidden lg:inline">Supprimer</span>
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>

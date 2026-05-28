@@ -3,8 +3,12 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { canDo, getSessionRole } from '@/lib/permissions'
 
 export async function createLot(formData: FormData) {
+  const role = await getSessionRole()
+  if (!canDo(role, 'lots', 'ajouter')) redirect('/acces-interdit')
+
   const numero         = (formData.get('numero') as string).trim()
   const nom            = (formData.get('nom') as string).trim()
   const acquisitionId  = parseInt(formData.get('acquisitionId') as string)
@@ -21,6 +25,11 @@ export async function createLot(formData: FormData) {
 export async function deleteLot(
   id: number
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'lots', 'supprimer')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const articlesCount = await prisma.article.count({ where: { lotId: id } })
     if (articlesCount > 0) {
@@ -51,6 +60,11 @@ export async function createSociete(data: {
   email?: string
   adresse?: string
 }): Promise<{ success: boolean; id?: number; nom?: string; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'societes', 'ajouter')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const societe = await prisma.societe.create({ data })
     revalidatePath('/lots/nouveau')

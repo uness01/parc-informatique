@@ -40,7 +40,15 @@ const TYPE_BADGE: Record<string, string> = {
 
 // ─── Component ────────────────────────────────────────────────
 
-export function AcquisitionsTable({ data }: { data: AcqRow[] }) {
+export function AcquisitionsTable({
+  data,
+  canModifier  = true,
+  canSupprimer = true,
+}: {
+  data: AcqRow[]
+  canModifier?:  boolean
+  canSupprimer?: boolean
+}) {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [confirmId,  setConfirmId]  = useState<number | null>(null)
   const [errorMsg,   setErrorMsg]   = useState<string | null>(null)
@@ -76,9 +84,11 @@ export function AcquisitionsTable({ data }: { data: AcqRow[] }) {
         <Package size={44} className="opacity-20" />
         <p className="text-sm font-medium">Aucune acquisition trouvée</p>
         <p className="text-xs">Modifiez vos filtres ou ajoutez une acquisition</p>
-        <Link href="/acquisitions/nouveau" className="btn-primary mt-2">
-          + Ajouter une acquisition
-        </Link>
+        {canModifier && (
+          <Link href="/acquisitions/nouveau" className="btn-primary mt-2">
+            + Ajouter une acquisition
+          </Link>
+        )}
       </div>
     )
   }
@@ -242,22 +252,26 @@ export function AcquisitionsTable({ data }: { data: AcqRow[] }) {
                               <Eye size={13} />
                               <span className="hidden lg:inline">Détails</span>
                             </Link>
-                            <Link
-                              href={`/acquisitions/${acq.id}/modifier`}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
-                              title="Modifier"
-                            >
-                              <Pencil size={13} />
-                              <span className="hidden lg:inline">Modifier</span>
-                            </Link>
-                            <button
-                              onClick={(e) => handleDeleteClick(e, acq.id)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
-                              title="Supprimer"
-                            >
-                              <Trash2 size={13} />
-                              <span className="hidden lg:inline">Supprimer</span>
-                            </button>
+                            {canModifier && (
+                              <Link
+                                href={`/acquisitions/${acq.id}/modifier`}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
+                                title="Modifier"
+                              >
+                                <Pencil size={13} />
+                                <span className="hidden lg:inline">Modifier</span>
+                              </Link>
+                            )}
+                            {canSupprimer && (
+                              <button
+                                onClick={(e) => handleDeleteClick(e, acq.id)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+                                title="Supprimer"
+                              >
+                                <Trash2 size={13} />
+                                <span className="hidden lg:inline">Supprimer</span>
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>
@@ -279,12 +293,14 @@ export function AcquisitionsTable({ data }: { data: AcqRow[] }) {
                                 <span className="text-xs text-green-700">
                                   {acq.lots.length} lot(s) enregistré(s) / {acq.nombreLots} prévu(s)
                                 </span>
-                                <Link
-                                  href="/lots/nouveau"
-                                  className="text-xs font-semibold text-green-700 hover:text-green-900 hover:underline"
-                                >
-                                  + Ajouter un lot
-                                </Link>
+                                {canModifier && (
+                                  <Link
+                                    href="/lots/nouveau"
+                                    className="text-xs font-semibold text-green-700 hover:text-green-900 hover:underline"
+                                  >
+                                    + Ajouter un lot
+                                  </Link>
+                                )}
                               </div>
                             </div>
 

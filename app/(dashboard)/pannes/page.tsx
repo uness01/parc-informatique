@@ -1,9 +1,12 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { STATUT_PANNE_LABELS, PRIORITE_LABELS } from '@/lib/utils'
 import { PannesTable } from '@/components/PannesTable'
+import { canDo } from '@/lib/permissions'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -22,6 +25,12 @@ export default async function PannesPage({
 }: {
   searchParams: SearchParams
 }) {
+  const session = await getServerSession(authOptions)
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
+  const canAjouter   = canDo(role, 'pannes', 'ajouter')
+  const canModifier  = canDo(role, 'pannes', 'modifier')
+  const canSupprimer = canDo(role, 'pannes', 'supprimer')
+
   const { materiel, statut, priorite, dateFrom, dateTo } = searchParams
 
   const hasFilters = !!(materiel || statut || priorite || dateFrom || dateTo)
@@ -92,10 +101,12 @@ export default async function PannesPage({
               )}
             </p>
           </div>
-          <Link href="/pannes/nouvelle" className="btn-primary flex-shrink-0">
-            <Plus size={15} />
-            Déclarer une panne
-          </Link>
+          {canAjouter && (
+            <Link href="/pannes/nouvelle" className="btn-primary flex-shrink-0">
+              <Plus size={15} />
+              Déclarer une panne
+            </Link>
+          )}
         </div>
 
         {/* ── Filter bar ───────────────────────────────── */}
@@ -182,7 +193,7 @@ export default async function PannesPage({
         </div>
 
         {/* ── Table ────────────────────────────────────── */}
-        <PannesTable data={rows} />
+        <PannesTable data={rows} canModifier={canModifier} canSupprimer={canSupprimer} />
 
       </main>
     </>

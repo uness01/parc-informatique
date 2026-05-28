@@ -2,10 +2,16 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { canDo, getSessionRole } from '@/lib/permissions'
 
 export async function createPanne(
   formData: FormData
 ): Promise<{ success: boolean; id?: number; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'pannes', 'ajouter')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const materielId    = parseInt(formData.get('materielId') as string)
     const utilisateurId = parseInt(formData.get('utilisateurId') as string)
@@ -26,7 +32,6 @@ export async function createPanne(
         data: { materielId, utilisateurId, description, priorite: priorite as any, date, statut: 'OUVERTE' },
       })
 
-      // Only transition to EN_REPARATION if not already
       const materiel = await tx.materiel.findUnique({ where: { id: materielId }, select: { statut: true } })
       if (materiel && materiel.statut !== 'EN_REPARATION') {
         await tx.etatMateriel.updateMany({
@@ -57,6 +62,11 @@ export async function updatePanneStatut(
   id: number,
   statut: string
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'pannes', 'modifier')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     await prisma.panne.update({ where: { id }, data: { statut: statut as any } })
     revalidatePath('/pannes')
@@ -69,6 +79,11 @@ export async function updatePanneStatut(
 export async function deletePanne(
   id: number
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'pannes', 'supprimer')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const count = await prisma.reparation.count({ where: { panneId: id } })
     if (count > 0) {

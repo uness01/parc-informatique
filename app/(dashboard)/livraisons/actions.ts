@@ -2,10 +2,16 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { canDo, getSessionRole } from '@/lib/permissions'
 
 export async function createLivraison(
   formData: FormData
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'livraisons', 'ajouter')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const lotId        = parseInt(formData.get('lotId') as string)
     const numeroBL     = (formData.get('numeroBL') as string).trim()
@@ -29,6 +35,11 @@ export async function createLivraison(
 export async function deleteLivraison(
   id: number
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'livraisons', 'supprimer')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const materielsCount = await prisma.materiel.count({ where: { livraisonId: id } })
     if (materielsCount > 0) {

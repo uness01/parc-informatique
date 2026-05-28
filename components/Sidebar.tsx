@@ -27,11 +27,12 @@ type Child = {
   name: string
   href: string
   icon: React.ElementType
+  requiredRoles?: string[]
 }
 
 type NavItem =
-  | { type: 'link'; name: string; href: string; icon: React.ElementType }
-  | { type: 'group'; name: string; icon: React.ElementType; base: string; children: Child[]; adminOnly?: boolean }
+  | { type: 'link'; name: string; href: string; icon: React.ElementType; adminOnly?: boolean }
+  | { type: 'group'; name: string; icon: React.ElementType; base: string; children: Child[]; adminOnly?: boolean; visibleTo?: string[] }
   | { type: 'divider'; label: string; adminOnly?: boolean }
 
 // ─── Navigation config ────────────────────────────────────────
@@ -51,9 +52,10 @@ const navigation: NavItem[] = [
     name: 'Acquisitions',
     icon: Package,
     base: '/acquisitions',
+    visibleTo: ['ADMIN', 'GESTIONNAIRE', 'CONSULTANT'],
     children: [
       { name: 'Liste', href: '/acquisitions', icon: List },
-      { name: 'Ajouter', href: '/acquisitions/nouveau', icon: Plus },
+      { name: 'Ajouter', href: '/acquisitions/nouveau', icon: Plus, requiredRoles: ['ADMIN', 'GESTIONNAIRE'] },
     ],
   },
   {
@@ -61,9 +63,10 @@ const navigation: NavItem[] = [
     name: 'Lots',
     icon: Layers,
     base: '/lots',
+    visibleTo: ['ADMIN', 'GESTIONNAIRE', 'CONSULTANT'],
     children: [
       { name: 'Liste', href: '/lots', icon: List },
-      { name: 'Ajouter', href: '/lots/nouveau', icon: Plus },
+      { name: 'Ajouter', href: '/lots/nouveau', icon: Plus, requiredRoles: ['ADMIN', 'GESTIONNAIRE'] },
     ],
   },
   {
@@ -71,9 +74,10 @@ const navigation: NavItem[] = [
     name: 'Articles',
     icon: Tag,
     base: '/articles',
+    visibleTo: ['ADMIN', 'GESTIONNAIRE', 'CONSULTANT'],
     children: [
       { name: 'Liste', href: '/articles', icon: List },
-      { name: 'Ajouter', href: '/articles/nouveau', icon: Plus },
+      { name: 'Ajouter', href: '/articles/nouveau', icon: Plus, requiredRoles: ['ADMIN', 'GESTIONNAIRE'] },
     ],
   },
   {
@@ -81,9 +85,10 @@ const navigation: NavItem[] = [
     name: 'Livraisons',
     icon: Truck,
     base: '/livraisons',
+    visibleTo: ['ADMIN', 'GESTIONNAIRE', 'CONSULTANT'],
     children: [
       { name: 'Liste', href: '/livraisons', icon: List },
-      { name: 'Ajouter', href: '/livraisons/nouveau', icon: Plus },
+      { name: 'Ajouter', href: '/livraisons/nouveau', icon: Plus, requiredRoles: ['ADMIN', 'GESTIONNAIRE'] },
     ],
   },
   {
@@ -93,7 +98,7 @@ const navigation: NavItem[] = [
     base: '/materiels',
     children: [
       { name: 'Liste', href: '/materiels', icon: List },
-      { name: 'Ajouter', href: '/materiels/nouveau', icon: Plus },
+      { name: 'Ajouter', href: '/materiels/nouveau', icon: Plus, requiredRoles: ['ADMIN', 'GESTIONNAIRE'] },
     ],
   },
   {
@@ -103,7 +108,7 @@ const navigation: NavItem[] = [
     base: '/affectations',
     children: [
       { name: 'Liste', href: '/affectations', icon: List },
-      { name: 'Ajouter', href: '/affectations/nouvelle', icon: Plus },
+      { name: 'Ajouter', href: '/affectations/nouvelle', icon: Plus, requiredRoles: ['ADMIN', 'GESTIONNAIRE'] },
     ],
   },
   {
@@ -113,7 +118,7 @@ const navigation: NavItem[] = [
     base: '/pannes',
     children: [
       { name: 'Liste', href: '/pannes', icon: List },
-      { name: 'Ajouter', href: '/pannes/nouvelle', icon: Plus },
+      { name: 'Ajouter', href: '/pannes/nouvelle', icon: Plus, requiredRoles: ['ADMIN', 'GESTIONNAIRE', 'TECHNICIEN'] },
     ],
   },
   {
@@ -123,7 +128,7 @@ const navigation: NavItem[] = [
     base: '/reparations',
     children: [
       { name: 'Liste', href: '/reparations', icon: List },
-      { name: 'Ajouter', href: '/reparations/nouvelle', icon: Plus },
+      { name: 'Ajouter', href: '/reparations/nouvelle', icon: Plus, requiredRoles: ['ADMIN', 'GESTIONNAIRE', 'TECHNICIEN'] },
     ],
   },
 
@@ -154,9 +159,11 @@ const navigation: NavItem[] = [
 function NavGroup({
   item,
   pathname,
+  role,
 }: {
   item: Extract<NavItem, { type: 'group' }>
   pathname: string
+  role: string
 }) {
   const isActive = pathname === item.base || pathname.startsWith(item.base + '/')
   const [open, setOpen] = useState(isActive)
@@ -165,6 +172,10 @@ function NavGroup({
   useEffect(() => {
     if (isActive) setOpen(true)
   }, [isActive])
+
+  const visibleChildren = item.children.filter(
+    (c) => !c.requiredRoles || c.requiredRoles.includes(role)
+  )
 
   return (
     <div>
@@ -202,7 +213,7 @@ function NavGroup({
         }`}
       >
         <div className="mt-0.5 ml-6 space-y-0.5 pb-1">
-          {item.children.map((child) => {
+          {visibleChildren.map((child) => {
             const active = pathname === child.href
             const isAdd = child.icon === Plus
             return (
@@ -236,7 +247,7 @@ function NavGroup({
 export function Sidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
-  const role = (session?.user as any)?.role
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
   const isAdmin = role === 'ADMIN'
 
   return (
@@ -286,6 +297,9 @@ export function Sidebar() {
           // Skip admin-only items for non-admins
           if ((item as any).adminOnly && !isAdmin) return null
 
+          // Skip groups not visible to this role
+          if (item.type === 'group' && item.visibleTo && !item.visibleTo.includes(role)) return null
+
           if (item.type === 'divider') {
             return (
               <div key={i} className="pt-3 pb-1.5 px-2">
@@ -325,7 +339,7 @@ export function Sidebar() {
 
           if (item.type === 'group') {
             return (
-              <NavGroup key={item.base} item={item} pathname={pathname} />
+              <NavGroup key={item.base} item={item} pathname={pathname} role={role} />
             )
           }
 

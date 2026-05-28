@@ -2,10 +2,16 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { canDo, getSessionRole } from '@/lib/permissions'
 
 export async function createReparation(
   formData: FormData
 ): Promise<{ success: boolean; id?: number; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'reparations', 'ajouter')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const panneId      = parseInt(formData.get('panneId') as string)
     const technicienId = parseInt(formData.get('technicienId') as string)
@@ -41,7 +47,6 @@ export async function createReparation(
         },
       })
 
-      // Move panne to EN_COURS if still OUVERTE
       const panne = await tx.panne.findUnique({
         where: { id: panneId },
         select: { statut: true, materielId: true },
@@ -50,7 +55,6 @@ export async function createReparation(
         await tx.panne.update({ where: { id: panneId }, data: { statut: 'EN_COURS' } })
       }
 
-      // If created as TERMINEE, resolve panne & restore materiel
       if (statut === 'TERMINEE' && panne) {
         await tx.panne.update({ where: { id: panneId }, data: { statut: 'RESOLUE' } })
         const resolved = dateFin ?? dateDebut
@@ -86,6 +90,11 @@ export async function updateReparationStatut(
   id: number,
   statut: string
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'reparations', 'modifier')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     await prisma.$transaction(async (tx) => {
       const r = await tx.reparation.findUnique({
@@ -131,6 +140,11 @@ export async function updateReparationStatut(
 export async function deleteReparation(
   id: number
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'reparations', 'supprimer')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     await prisma.reparation.delete({ where: { id } })
     revalidatePath('/reparations')

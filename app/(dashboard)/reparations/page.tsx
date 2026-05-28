@@ -1,9 +1,12 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { STATUT_REPARATION_LABELS } from '@/lib/utils'
 import { ReparationsTable } from '@/components/ReparationsTable'
+import { canDo } from '@/lib/permissions'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -21,6 +24,12 @@ export default async function ReparationsPage({
 }: {
   searchParams: SearchParams
 }) {
+  const session = await getServerSession(authOptions)
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
+  const canAjouter   = canDo(role, 'reparations', 'ajouter')
+  const canModifier  = canDo(role, 'reparations', 'modifier')
+  const canSupprimer = canDo(role, 'reparations', 'supprimer')
+
   const { panneId, statut, type, societeId } = searchParams
 
   const hasFilters = !!(panneId || statut || type || societeId)
@@ -95,10 +104,12 @@ export default async function ReparationsPage({
               )}
             </p>
           </div>
-          <Link href="/reparations/nouvelle" className="btn-primary flex-shrink-0">
-            <Plus size={15} />
-            Nouvelle réparation
-          </Link>
+          {canAjouter && (
+            <Link href="/reparations/nouvelle" className="btn-primary flex-shrink-0">
+              <Plus size={15} />
+              Nouvelle réparation
+            </Link>
+          )}
         </div>
 
         {/* ── Filter bar ───────────────────────────────── */}
@@ -162,7 +173,7 @@ export default async function ReparationsPage({
         </div>
 
         {/* ── Table ────────────────────────────────────── */}
-        <ReparationsTable data={rows} />
+        <ReparationsTable data={rows} canModifier={canModifier} canSupprimer={canSupprimer} />
 
       </main>
     </>

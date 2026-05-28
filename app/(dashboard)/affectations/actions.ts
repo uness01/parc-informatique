@@ -2,10 +2,16 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { canDo, getSessionRole } from '@/lib/permissions'
 
 export async function createAffectation(
   formData: FormData
 ): Promise<{ success: boolean; id?: number; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'affectations', 'ajouter')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const materielId    = parseInt(formData.get('materielId') as string)
     const utilisateurId = parseInt(formData.get('utilisateurId') as string)
@@ -31,7 +37,6 @@ export async function createAffectation(
       return { success: false, error: 'La date de fin est obligatoire pour clôturer.' }
     }
 
-    // Block if materiel already has an active affectation (only for active, not historical)
     if (!cloturee) {
       const existing = await prisma.affectation.findFirst({
         where: { materielId, dateFin: null },
@@ -59,12 +64,10 @@ export async function createAffectation(
       })
 
       if (!cloturee) {
-        // Close current open état
         await tx.etatMateriel.updateMany({
           where: { materielId, dateFin: null },
           data:  { dateFin: dateDebut },
         })
-        // Record new état
         await tx.etatMateriel.create({
           data: { materielId, etat: 'AFFECTE', dateDebut },
         })
@@ -89,6 +92,11 @@ export async function closeAffectation(
   id: number,
   formData: FormData
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'affectations', 'modifier')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const dateFinRaw = formData.get('dateFin') as string
     const etatRetour = (formData.get('etatRetour') as string) || null
@@ -105,12 +113,10 @@ export async function closeAffectation(
         where: { id },
         data:  { dateFin, etatRetour: etatRetour as any },
       })
-      // Close current état
       await tx.etatMateriel.updateMany({
         where: { materielId: aff.materielId, dateFin: null },
         data:  { dateFin },
       })
-      // Record return to DISPONIBLE
       await tx.etatMateriel.create({
         data: { materielId: aff.materielId, etat: 'DISPONIBLE', dateDebut: dateFin },
       })

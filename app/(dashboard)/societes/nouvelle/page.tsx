@@ -3,9 +3,13 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { canDo, getSessionRole } from '@/lib/permissions'
 
 async function createSociete(formData: FormData) {
   'use server'
+  const role = await getSessionRole()
+  if (!canDo(role, 'societes', 'ajouter')) redirect('/acces-interdit')
+
   await prisma.societe.create({
     data: {
       nom: formData.get('nom') as string,

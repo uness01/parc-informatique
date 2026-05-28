@@ -42,7 +42,15 @@ const ACQ_TYPE_BADGE: Record<string, string> = {
 
 // ─── Component ────────────────────────────────────────────────
 
-export function LivraisonsTable({ data }: { data: LivraisonRow[] }) {
+export function LivraisonsTable({
+  data,
+  canModifier  = true,
+  canSupprimer = true,
+}: {
+  data: LivraisonRow[]
+  canModifier?:  boolean
+  canSupprimer?: boolean
+}) {
   const [confirmId,  setConfirmId]  = useState<number | null>(null)
   const [errorMsg,   setErrorMsg]   = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -225,22 +233,26 @@ export function LivraisonsTable({ data }: { data: LivraisonRow[] }) {
                         </div>
                       ) : (
                         <div className="flex items-center justify-end gap-0.5">
-                          <Link
-                            href={`/livraisons/${liv.id}/modifier`}
-                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
-                            title="Modifier"
-                          >
-                            <Pencil size={13} />
-                            <span className="hidden xl:inline">Modifier</span>
-                          </Link>
-                          <button
-                            onClick={(e) => handleDeleteClick(e, liv.id)}
-                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={13} />
-                            <span className="hidden xl:inline">Supprimer</span>
-                          </button>
+                          {canModifier && (
+                            <Link
+                              href={`/livraisons/${liv.id}/modifier`}
+                              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
+                              title="Modifier"
+                            >
+                              <Pencil size={13} />
+                              <span className="hidden xl:inline">Modifier</span>
+                            </Link>
+                          )}
+                          {canSupprimer && (
+                            <button
+                              onClick={(e) => handleDeleteClick(e, liv.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={13} />
+                              <span className="hidden xl:inline">Supprimer</span>
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>

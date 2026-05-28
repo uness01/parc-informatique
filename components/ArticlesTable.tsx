@@ -25,7 +25,15 @@ export type ArticleRow = {
 
 // ─── Component ────────────────────────────────────────────────
 
-export function ArticlesTable({ data }: { data: ArticleRow[] }) {
+export function ArticlesTable({
+  data,
+  canModifier  = true,
+  canSupprimer = true,
+}: {
+  data: ArticleRow[]
+  canModifier?:  boolean
+  canSupprimer?: boolean
+}) {
   const [confirmId,  setConfirmId]  = useState<number | null>(null)
   const [errorMsg,   setErrorMsg]   = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -56,9 +64,11 @@ export function ArticlesTable({ data }: { data: ArticleRow[] }) {
         <Tag size={44} className="opacity-20" />
         <p className="text-sm font-medium">Aucun article trouvé</p>
         <p className="text-xs">Modifiez vos filtres ou ajoutez un article</p>
-        <Link href="/articles/nouveau" className="btn-primary mt-2">
-          + Ajouter un article
-        </Link>
+        {canModifier && (
+          <Link href="/articles/nouveau" className="btn-primary mt-2">
+            + Ajouter un article
+          </Link>
+        )}
       </div>
     )
   }
@@ -205,22 +215,26 @@ export function ArticlesTable({ data }: { data: ArticleRow[] }) {
                               </span>
                             )}
                           </Link>
-                          <Link
-                            href={`/articles/${article.id}/modifier`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
-                            title="Modifier"
-                          >
-                            <Pencil size={13} />
-                            <span className="hidden xl:inline">Modifier</span>
-                          </Link>
-                          <button
-                            onClick={(e) => handleDeleteClick(e, article.id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={13} />
-                            <span className="hidden xl:inline">Supprimer</span>
-                          </button>
+                          {canModifier && (
+                            <Link
+                              href={`/articles/${article.id}/modifier`}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
+                              title="Modifier"
+                            >
+                              <Pencil size={13} />
+                              <span className="hidden xl:inline">Modifier</span>
+                            </Link>
+                          )}
+                          {canSupprimer && (
+                            <button
+                              onClick={(e) => handleDeleteClick(e, article.id)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={13} />
+                              <span className="hidden xl:inline">Supprimer</span>
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>

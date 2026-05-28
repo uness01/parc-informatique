@@ -25,7 +25,15 @@ export type MaterielRow = {
 
 // ─── Component ────────────────────────────────────────────────
 
-export function MaterielsTable({ data }: { data: MaterielRow[] }) {
+export function MaterielsTable({
+  data,
+  canAjouterAffectation = true,
+  canAjouterPanne       = true,
+}: {
+  data: MaterielRow[]
+  canAjouterAffectation?: boolean
+  canAjouterPanne?:       boolean
+}) {
   if (data.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
@@ -114,22 +122,26 @@ export function MaterielsTable({ data }: { data: MaterielRow[] }) {
                       <Eye size={13} />
                       <span className="hidden xl:inline">Voir</span>
                     </Link>
-                    <Link
-                      href={`/affectations/nouvelle?materielId=${m.id}`}
-                      className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors"
-                      title="Affecter"
-                    >
-                      <UserPlus size={13} />
-                      <span className="hidden xl:inline">Affecter</span>
-                    </Link>
-                    <Link
-                      href={`/pannes/nouvelle?materielId=${m.id}`}
-                      className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-orange-600 hover:bg-orange-50 transition-colors"
-                      title="Signaler une panne"
-                    >
-                      <Wrench size={13} />
-                      <span className="hidden xl:inline">Panne</span>
-                    </Link>
+                    {canAjouterAffectation && (
+                      <Link
+                        href={`/affectations/nouvelle?materielId=${m.id}`}
+                        className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                        title="Affecter"
+                      >
+                        <UserPlus size={13} />
+                        <span className="hidden xl:inline">Affecter</span>
+                      </Link>
+                    )}
+                    {canAjouterPanne && (
+                      <Link
+                        href={`/pannes/nouvelle?materielId=${m.id}`}
+                        className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-orange-600 hover:bg-orange-50 transition-colors"
+                        title="Signaler une panne"
+                      >
+                        <Wrench size={13} />
+                        <span className="hidden xl:inline">Panne</span>
+                      </Link>
+                    )}
                   </div>
                 </td>
 

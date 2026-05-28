@@ -1,9 +1,12 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 import { LotsTable } from '@/components/LotsTable'
+import { canDo } from '@/lib/permissions'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -20,6 +23,12 @@ export default async function LotsPage({
 }: {
   searchParams: SearchParams
 }) {
+  const session = await getServerSession(authOptions)
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
+  const canAjouter   = canDo(role, 'lots', 'ajouter')
+  const canModifier  = canDo(role, 'lots', 'modifier')
+  const canSupprimer = canDo(role, 'lots', 'supprimer')
+
   const { acquisitionId, societeId, numero } = searchParams
   const hasFilters = !!(acquisitionId || societeId || numero)
 
@@ -75,10 +84,12 @@ export default async function LotsPage({
               )}
             </p>
           </div>
-          <Link href="/lots/nouveau" className="btn-primary flex-shrink-0">
-            <Plus size={15} />
-            Ajouter un lot
-          </Link>
+          {canAjouter && (
+            <Link href="/lots/nouveau" className="btn-primary flex-shrink-0">
+              <Plus size={15} />
+              Ajouter un lot
+            </Link>
+          )}
         </div>
 
         {/* ── Filter bar ───────────────────────────────── */}
@@ -141,7 +152,7 @@ export default async function LotsPage({
         </div>
 
         {/* ── Table ────────────────────────────────────── */}
-        <LotsTable data={rows} />
+        <LotsTable data={rows} canModifier={canModifier} canSupprimer={canSupprimer} />
 
       </main>
     </>

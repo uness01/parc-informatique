@@ -3,8 +3,12 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { canDo, getSessionRole } from '@/lib/permissions'
 
 export async function createArticle(formData: FormData) {
+  const role = await getSessionRole()
+  if (!canDo(role, 'articles', 'ajouter')) redirect('/acces-interdit')
+
   const numero         = (formData.get('numero') as string).trim()
   const designation    = (formData.get('designation') as string).trim()
   const marque         = (formData.get('marque') as string).trim()
@@ -24,6 +28,11 @@ export async function createArticle(formData: FormData) {
 export async function deleteArticle(
   id: number
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'articles', 'supprimer')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const materielsCount = await prisma.materiel.count({ where: { articleId: id } })
     if (materielsCount > 0) {
@@ -46,6 +55,11 @@ export async function addCaracteristique(
   nom: string,
   valeur: string
 ): Promise<{ success: boolean; data?: { id: number; nom: string; valeur: string }; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'articles', 'modifier')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     const c = await prisma.caracteristique.create({
       data: { articleId, nom: nom.trim(), valeur: valeur.trim() },
@@ -61,6 +75,11 @@ export async function updateCaracteristique(
   nom: string,
   valeur: string
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'articles', 'modifier')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     await prisma.caracteristique.update({
       where: { id },
@@ -75,6 +94,11 @@ export async function updateCaracteristique(
 export async function deleteCaracteristique(
   id: number
 ): Promise<{ success: boolean; error?: string }> {
+  const role = await getSessionRole()
+  if (!canDo(role, 'articles', 'modifier')) {
+    return { success: false, error: 'Permission refusée.' }
+  }
+
   try {
     await prisma.caracteristique.delete({ where: { id } })
     return { success: true }

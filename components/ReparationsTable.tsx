@@ -89,7 +89,15 @@ function StatutBadgeSelect({
 
 // ─── Main component ───────────────────────────────────────────
 
-export function ReparationsTable({ data }: { data: ReparationRow[] }) {
+export function ReparationsTable({
+  data,
+  canModifier  = true,
+  canSupprimer = true,
+}: {
+  data: ReparationRow[]
+  canModifier?:  boolean
+  canSupprimer?: boolean
+}) {
   const [confirmId,    setConfirmId]    = useState<number | null>(null)
   const [errorMsg,     setErrorMsg]     = useState<string | null>(null)
   const [isPending,    startTransition] = useTransition()
@@ -120,9 +128,11 @@ export function ReparationsTable({ data }: { data: ReparationRow[] }) {
         <Wrench size={44} className="opacity-20" />
         <p className="text-sm font-medium">Aucune réparation trouvée</p>
         <p className="text-xs">Modifiez vos filtres ou créez une réparation</p>
-        <Link href="/reparations/nouvelle" className="btn-primary mt-2">
-          + Nouvelle réparation
-        </Link>
+        {canModifier && (
+          <Link href="/reparations/nouvelle" className="btn-primary mt-2">
+            + Nouvelle réparation
+          </Link>
+        )}
       </div>
     )
   }
@@ -251,12 +261,18 @@ export function ReparationsTable({ data }: { data: ReparationRow[] }) {
 
                     {/* Statut */}
                     <td className="px-3 py-3.5 text-center">
-                      <StatutBadgeSelect reparationId={r.id} initialStatut={r.statut} />
+                      {canModifier ? (
+                        <StatutBadgeSelect reparationId={r.id} initialStatut={r.statut} />
+                      ) : (
+                        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUT_REPARATION_COLORS[r.statut] ?? 'bg-gray-100 text-gray-700'}`}>
+                          {STATUT_REPARATION_LABELS[r.statut] ?? r.statut}
+                        </span>
+                      )}
                     </td>
 
                     {/* Actions */}
                     <td className="px-3 py-3.5" onClick={(e) => e.stopPropagation()}>
-                      {isConfirm ? (
+                      {isConfirm && canSupprimer ? (
                         <div className="flex items-center justify-end gap-1.5 bg-red-50 border border-red-200 rounded-lg px-2 py-1.5">
                           <AlertCircle size={12} className="text-red-500 flex-shrink-0" />
                           <span className="text-xs font-semibold text-red-700 whitespace-nowrap">Supprimer ?</span>
@@ -275,7 +291,7 @@ export function ReparationsTable({ data }: { data: ReparationRow[] }) {
                             <X size={10} />
                           </button>
                         </div>
-                      ) : (
+                      ) : canSupprimer ? (
                         <div className="flex items-center justify-end">
                           <button
                             onClick={(e) => handleDeleteClick(e, r.id)}
@@ -285,6 +301,10 @@ export function ReparationsTable({ data }: { data: ReparationRow[] }) {
                             <Trash2 size={13} />
                             <span className="hidden xl:inline">Supprimer</span>
                           </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end">
+                          <span className="text-xs text-gray-300">—</span>
                         </div>
                       )}
                     </td>

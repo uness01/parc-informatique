@@ -1,9 +1,12 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
 import { STATUT_MATERIEL_LABELS } from '@/lib/utils'
 import { MaterielsTable } from '@/components/MaterielsTable'
+import { canDo } from '@/lib/permissions'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -25,6 +28,12 @@ export default async function MaterielsPage({
 }: {
   searchParams: SearchParams
 }) {
+  const session = await getServerSession(authOptions)
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
+  const canAjouter          = canDo(role, 'materiels', 'ajouter')
+  const canAjouterAffect    = canDo(role, 'affectations', 'ajouter')
+  const canAjouterPanne     = canDo(role, 'pannes', 'ajouter')
+
   const {
     numeroInventaire, numeroSerie, designation,
     marque, modele, statut, acquisitionId, lotId,
@@ -124,10 +133,12 @@ export default async function MaterielsPage({
               )}
             </p>
           </div>
-          <Link href="/materiels/nouveau" className="btn-primary flex-shrink-0">
-            <Plus size={15} />
-            Nouveau matériel
-          </Link>
+          {canAjouter && (
+            <Link href="/materiels/nouveau" className="btn-primary flex-shrink-0">
+              <Plus size={15} />
+              Nouveau matériel
+            </Link>
+          )}
         </div>
 
         {/* ── Filter bar ───────────────────────────────── */}
@@ -247,7 +258,7 @@ export default async function MaterielsPage({
         </div>
 
         {/* ── Table ────────────────────────────────────── */}
-        <MaterielsTable data={rows} />
+        <MaterielsTable data={rows} canAjouterAffectation={canAjouterAffect} canAjouterPanne={canAjouterPanne} />
 
       </main>
     </>
