@@ -1,9 +1,10 @@
 'use client'
 
 import { useSession, signOut } from 'next-auth/react'
-import { Landmark, LogOut, ChevronDown } from 'lucide-react'
+import { Menu, Landmark, LogOut, ChevronDown } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { ROLE_LABELS } from '@/lib/utils'
+import { useSidebar } from './DashboardShell'
 
 const ROLE_BADGE: Record<string, string> = {
   ADMIN:        'bg-red-100 text-red-700 border border-red-200',
@@ -14,6 +15,7 @@ const ROLE_BADGE: Record<string, string> = {
 
 export function Header({ title }: { title?: string }) {
   const { data: session } = useSession()
+  const { toggle } = useSidebar()
   const role  = (session?.user as any)?.role as string | undefined
   const name  = session?.user?.name ?? '—'
   const initials = name
@@ -44,8 +46,16 @@ export function Header({ title }: { title?: string }) {
       px-5 shadow-sm
     ">
 
-      {/* ── Left: Ministry logo ──────────────────────────── */}
+      {/* ── Left: hamburger (mobile) + Ministry logo ──────── */}
       <div className="flex items-center gap-3 min-w-0">
+        {/* Hamburger — mobile only */}
+        <button
+          onClick={toggle}
+          className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0"
+          aria-label="Ouvrir le menu"
+        >
+          <Menu size={20} />
+        </button>
         {/* Icon badge */}
         <div className="
           flex-shrink-0 w-8 h-8 rounded-lg
@@ -69,7 +79,7 @@ export function Header({ title }: { title?: string }) {
         {title && (
           <>
             <div className="hidden md:block h-6 w-px bg-gray-200 mx-1" />
-            <p className="text-sm font-semibold text-gray-600 truncate">{title}</p>
+            <p className="text-sm font-semibold text-gray-600 truncate hidden sm:block">{title}</p>
           </>
         )}
       </div>

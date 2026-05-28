@@ -18,8 +18,9 @@ import {
   List,
   Plus,
   ChevronDown,
+  X,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -244,23 +245,32 @@ function NavGroup({
 
 // ─── Sidebar ──────────────────────────────────────────────────
 
-export function Sidebar() {
+export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const pathname = usePathname()
   const { data: session } = useSession()
   const role = (session?.user as any)?.role ?? 'CONSULTANT'
   const isAdmin = role === 'ADMIN'
 
+  // Close sidebar on route change (mobile)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose }, [onClose])
+  useEffect(() => { onCloseRef.current() }, [pathname])
+
   return (
     <aside
-      className="
+      className={`
         fixed inset-y-0 left-0 z-50 w-64
         flex flex-col
         bg-gradient-to-b from-green-900 via-green-900 to-green-950
         shadow-[4px_0_24px_rgba(0,0,0,0.3)]
-      "
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0
+      `}
     >
       {/* ── Brand ──────────────────────────────────────── */}
       <div className="flex-shrink-0 px-4 pt-5 pb-4 border-b border-white/10">
+        <div className="flex items-start justify-between gap-2">
         <Link href="/dashboard" className="flex items-center gap-3 group">
           <div className="
             w-9 h-9 rounded-xl
@@ -280,6 +290,14 @@ export function Sidebar() {
             </p>
           </div>
         </Link>
+        <button
+          onClick={onClose}
+          className="lg:hidden mt-0.5 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg text-green-400 hover:text-white hover:bg-white/10 transition-colors"
+          aria-label="Fermer le menu"
+        >
+          <X size={18} />
+        </button>
+        </div>
         <p className="mt-2.5 text-[10px] text-green-500 leading-relaxed">
           Ministère de l&apos;Énergie, des Mines,
           <br />de l&apos;Eau et de l&apos;Environnement
