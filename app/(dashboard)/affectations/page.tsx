@@ -4,7 +4,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import Link from 'next/link'
 import { Plus, SlidersHorizontal, X } from 'lucide-react'
-import { STATUT_MATERIEL_LABELS } from '@/lib/utils'
 import { AffectationsTable } from '@/components/AffectationsTable'
 import { canDo } from '@/lib/permissions'
 

@@ -16,21 +16,10 @@ export default async function ModifierReparationPage({
   const id = parseInt(params.id)
   if (isNaN(id)) notFound()
 
-  const [reparation, pannes, techniciens, societes] = await Promise.all([
-    prisma.reparation.findUnique({
-      where: { id },
-      include: { panne: { include: { materiel: { include: { article: true } } } } },
-    }),
-    prisma.panne.findMany({
-      include: { materiel: { include: { article: true } } },
-      orderBy: { date: 'desc' },
-    }),
-    prisma.utilisateur.findMany({
-      where: { actif: true, role: 'TECHNICIEN' },
-      orderBy: [{ nom: 'asc' }, { prenom: 'asc' }],
-    }),
-    prisma.societe.findMany({ orderBy: { nom: 'asc' } }),
-  ])
+  const reparation = await prisma.reparation.findUnique({
+    where: { id },
+    include: { panne: { include: { materiel: { include: { article: true } } } } },
+  })
   if (!reparation) notFound()
 
   const action = updateReparation.bind(null, id)

@@ -18,9 +18,6 @@ type ModulePermissions = {
 const ACTIONS: Action[] = ['Consulter', 'Ajouter', 'Modifier', 'Supprimer']
 const ROLES: Role[]     = ['ADMIN', 'GESTIONNAIRE', 'TECHNICIEN', 'CONSULTANT']
 
-function all(): Record<Role, boolean> {
-  return { ADMIN: true, GESTIONNAIRE: true, TECHNICIEN: true, CONSULTANT: true }
-}
 function adminGestionnaire(): Record<Role, boolean> {
   return { ADMIN: true, GESTIONNAIRE: true, TECHNICIEN: false, CONSULTANT: false }
 }
@@ -188,7 +185,7 @@ export default async function ProfilsPage() {
               </thead>
 
               <tbody>
-                {MATRIX.map((item, moduleIdx) => (
+                {MATRIX.map((item, _moduleIdx) => (
                   ACTIONS.map((action, actionIdx) => (
                     <tr
                       key={`${item.module}-${action}`}

@@ -6,7 +6,6 @@ import Link from 'next/link'
 import {
   AlertCircle, Loader2, UserCheck, ChevronDown, Calendar,
 } from 'lucide-react'
-import { formatDate } from '@/lib/utils'
 import { createAffectation } from '@/app/(dashboard)/affectations/actions'
 
 // ─── Types ────────────────────────────────────────────────────

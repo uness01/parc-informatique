@@ -6,7 +6,7 @@ import {
   ArrowLeft, Layers, Pencil, Building2, CreditCard,
   Hash, Tag, ShieldCheck, ShieldOff, Settings2,
 } from 'lucide-react'
-import { formatCurrency, formatDate, TYPE_ACQUISITION_LABELS } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
 
 export default async function LotDetailPage({ params }: { params: { id: string } }) {
   const id = parseInt(params.id)

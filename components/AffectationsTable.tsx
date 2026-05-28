@@ -31,11 +31,6 @@ const ETAT_RETOUR_LABELS: Record<string, string> = {
   MOYEN:   'État moyen',
   MAUVAIS: 'Mauvais état',
 }
-const ETAT_RETOUR_COLORS: Record<string, string> = {
-  BON:     'bg-green-100 text-green-800',
-  MOYEN:   'bg-yellow-100 text-yellow-800',
-  MAUVAIS: 'bg-red-100 text-red-800',
-}
 
 // ─── Component ────────────────────────────────────────────────
 

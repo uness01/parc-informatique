@@ -4,8 +4,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft, Monitor, User, MapPin, Calendar, Clock,
-  Hash, Truck, Building2, Cpu, ShieldCheck, ShieldOff,
-  Printer, FileText, PackageCheck, PackageX,
+  Hash, Building2, Cpu, ShieldCheck, ShieldOff,
+  Printer, FileText,
 } from 'lucide-react'
 import {
   STATUT_MATERIEL_LABELS, STATUT_MATERIEL_COLORS,

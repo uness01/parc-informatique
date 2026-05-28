@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ChevronDown, ChevronRight, Check, Loader2,
-  Layers, CreditCard, Hash, AlertCircle,
+  CreditCard, Hash, AlertCircle,
 } from 'lucide-react'
 import { formatCurrency, formatDate, TYPE_ACQUISITION_LABELS } from '@/lib/utils'
 import { createLivraison } from '@/app/(dashboard)/livraisons/actions'

@@ -1,6 +1,6 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Layers } from 'lucide-react'
 import { updateLot } from '@/app/(dashboard)/lots/actions'
