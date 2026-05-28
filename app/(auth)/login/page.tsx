@@ -1,34 +1,45 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Monitor, Lock, Mail, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('error')) {
-      setError('Email ou mot de passe incorrect.')
-    }
-  }, [])
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
-    await signIn('credentials', {
-      email,
-      password,
-      callbackUrl: '/dashboard',
-      redirect: true,
-    })
-    setLoading(false)
+
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        setError('Email ou mot de passe incorrect.')
+        setLoading(false)
+        return
+      }
+
+      if (result?.ok) {
+        router.push('/dashboard')
+        router.refresh()
+      }
+    } catch {
+      // NextAuth throws when NEXTAUTH_URL is unset and returns a relative URL.
+      // The cookie is still set on success — let the middleware sort it out.
+      router.push('/dashboard')
+    }
   }
 
   return (
