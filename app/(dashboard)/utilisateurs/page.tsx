@@ -1,82 +1,85 @@
 import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, CheckCircle, XCircle } from 'lucide-react'
-import { ROLE_LABELS, formatDate } from '@/lib/utils'
+import { Plus, Users } from 'lucide-react'
+import { ROLE_LABELS } from '@/lib/utils'
+import { UtilisateursTable } from '@/components/UtilisateursTable'
 
-const ROLE_COLORS: Record<string, string> = {
-  ADMIN: 'bg-red-100 text-red-800',
-  GESTIONNAIRE: 'bg-blue-100 text-blue-800',
-  TECHNICIEN: 'bg-orange-100 text-orange-800',
-  CONSULTANT: 'bg-gray-100 text-gray-700',
-}
+// ─── Page ─────────────────────────────────────────────────────
 
 export default async function UtilisateursPage() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user) redirect('/login')
+  if ((session.user as any).role !== 'ADMIN') redirect('/acces-interdit')
+
+  const currentId = Number((session.user as any).id)
+
   const utilisateurs = await prisma.utilisateur.findMany({
     orderBy: [{ nom: 'asc' }, { prenom: 'asc' }],
   })
 
+  const rows = utilisateurs.map((u) => ({
+    id:     u.id,
+    nom:    u.nom,
+    prenom: u.prenom,
+    email:  u.email,
+    login:  u.login,
+    role:   u.role,
+    actif:  u.actif,
+    isSelf: u.id === currentId,
+  }))
+
+  const activeCount   = utilisateurs.filter((u) => u.actif).length
+  const inactiveCount = utilisateurs.length - activeCount
+
+  const roleBreakdown = Object.entries(ROLE_LABELS).map(([role, label]) => ({
+    role, label,
+    count: utilisateurs.filter((u) => u.role === role).length,
+  })).filter((r) => r.count > 0)
+
   return (
     <>
       <Header title="Utilisateurs" />
-      <main className="flex-1 p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">{utilisateurs.length} utilisateur(s)</p>
-          <Link href="/utilisateurs/nouveau" className="btn-primary">
-            <Plus size={16} />
+      <main className="flex-1 p-6 space-y-5">
+
+        {/* ── Top bar ──────────────────────────────────── */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Utilisateurs</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {utilisateurs.length} compte(s)
+              {activeCount > 0   && <span className="text-green-700 font-medium"> — {activeCount} actif(s)</span>}
+              {inactiveCount > 0 && <span className="text-gray-400"> · {inactiveCount} inactif(s)</span>}
+            </p>
+          </div>
+          <Link href="/utilisateurs/nouveau" className="btn-primary flex-shrink-0">
+            <Plus size={15} />
             Nouvel utilisateur
           </Link>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-100">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Nom complet</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rôle</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Statut</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Créé le</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-50">
-                {utilisateurs.map((u) => (
-                  <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                          {u.prenom.charAt(0)}{u.nom.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">{u.prenom} {u.nom}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={`badge ${ROLE_COLORS[u.role]}`}>{ROLE_LABELS[u.role]}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {u.actif ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-green-700 font-medium">
-                          <CheckCircle size={13} />
-                          Actif
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs text-red-600 font-medium">
-                          <XCircle size={13} />
-                          Inactif
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-400">{formatDate(u.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* ── Stats bar ────────────────────────────────── */}
+        {roleBreakdown.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {roleBreakdown.map(({ role, label, count }) => (
+              <div
+                key={role}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-100 rounded-lg shadow-sm"
+              >
+                <Users size={12} className="text-gray-400" />
+                <span className="text-xs text-gray-500">{label}</span>
+                <span className="text-xs font-bold text-gray-900">{count}</span>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
+
+        {/* ── Table ────────────────────────────────────── */}
+        <UtilisateursTable data={rows} />
+
       </main>
     </>
   )

@@ -1,138 +1,261 @@
 import { Header } from '@/components/Header'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import { User, Mail, Shield, Calendar } from 'lucide-react'
-import { ROLE_LABELS, formatDate } from '@/lib/utils'
-import bcrypt from 'bcryptjs'
+import { Shield } from 'lucide-react'
+import { ROLE_LABELS } from '@/lib/utils'
 
-const ROLE_BADGE: Record<string, string> = {
-  ADMIN:        'bg-red-100 text-red-700',
-  GESTIONNAIRE: 'bg-blue-100 text-blue-700',
-  TECHNICIEN:   'bg-orange-100 text-orange-700',
-  CONSULTANT:   'bg-gray-100 text-gray-600',
+// ─── Permissions matrix ───────────────────────────────────────
+
+type Action = 'Consulter' | 'Ajouter' | 'Modifier' | 'Supprimer'
+type Role   = 'ADMIN' | 'GESTIONNAIRE' | 'TECHNICIEN' | 'CONSULTANT'
+
+type ModulePermissions = {
+  module: string
+  permissions: Record<Action, Record<Role, boolean>>
 }
 
-async function updatePassword(formData: FormData) {
-  'use server'
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return
+const ACTIONS: Action[] = ['Consulter', 'Ajouter', 'Modifier', 'Supprimer']
+const ROLES: Role[]     = ['ADMIN', 'GESTIONNAIRE', 'TECHNICIEN', 'CONSULTANT']
 
-  const userId       = Number((session.user as any).id)
-  const current      = formData.get('currentPassword') as string
-  const newPassword  = formData.get('newPassword') as string
-  const confirmation = formData.get('confirmation') as string
-
-  if (newPassword !== confirmation) return
-
-  const user = await prisma.utilisateur.findUnique({ where: { id: userId } })
-  if (!user) return
-
-  const valid = await bcrypt.compare(current, user.password)
-  if (!valid) return
-
-  const hashed = await bcrypt.hash(newPassword, 10)
-  await prisma.utilisateur.update({ where: { id: userId }, data: { password: hashed } })
-  redirect('/profils?updated=1')
+function all(): Record<Role, boolean> {
+  return { ADMIN: true, GESTIONNAIRE: true, TECHNICIEN: true, CONSULTANT: true }
+}
+function adminGestionnaire(): Record<Role, boolean> {
+  return { ADMIN: true, GESTIONNAIRE: true, TECHNICIEN: false, CONSULTANT: false }
+}
+function adminOnly(): Record<Role, boolean> {
+  return { ADMIN: true, GESTIONNAIRE: false, TECHNICIEN: false, CONSULTANT: false }
+}
+function consultAndGestAndAdmin(): Record<Role, boolean> {
+  return { ADMIN: true, GESTIONNAIRE: true, TECHNICIEN: false, CONSULTANT: true }
+}
+function techAndAbove(): Record<Role, boolean> {
+  return { ADMIN: true, GESTIONNAIRE: true, TECHNICIEN: true, CONSULTANT: false }
+}
+function allCanView(): Record<Role, boolean> {
+  return { ADMIN: true, GESTIONNAIRE: true, TECHNICIEN: true, CONSULTANT: true }
 }
 
-export default async function ProfilPage({
-  searchParams,
-}: {
-  searchParams: { updated?: string }
-}) {
+const MATRIX: ModulePermissions[] = [
+  {
+    module: 'Acquisitions',
+    permissions: {
+      Consulter:  consultAndGestAndAdmin(),
+      Ajouter:    adminGestionnaire(),
+      Modifier:   adminGestionnaire(),
+      Supprimer:  adminOnly(),
+    },
+  },
+  {
+    module: 'Lots',
+    permissions: {
+      Consulter:  consultAndGestAndAdmin(),
+      Ajouter:    adminGestionnaire(),
+      Modifier:   adminGestionnaire(),
+      Supprimer:  adminOnly(),
+    },
+  },
+  {
+    module: 'Articles',
+    permissions: {
+      Consulter:  consultAndGestAndAdmin(),
+      Ajouter:    adminGestionnaire(),
+      Modifier:   adminGestionnaire(),
+      Supprimer:  adminOnly(),
+    },
+  },
+  {
+    module: 'Livraisons',
+    permissions: {
+      Consulter:  consultAndGestAndAdmin(),
+      Ajouter:    adminGestionnaire(),
+      Modifier:   adminGestionnaire(),
+      Supprimer:  adminOnly(),
+    },
+  },
+  {
+    module: 'Matériels',
+    permissions: {
+      Consulter:  allCanView(),
+      Ajouter:    adminGestionnaire(),
+      Modifier:   adminGestionnaire(),
+      Supprimer:  adminOnly(),
+    },
+  },
+  {
+    module: 'Affectations',
+    permissions: {
+      Consulter:  allCanView(),
+      Ajouter:    adminGestionnaire(),
+      Modifier:   adminGestionnaire(),
+      Supprimer:  adminOnly(),
+    },
+  },
+  {
+    module: 'Pannes',
+    permissions: {
+      Consulter:  allCanView(),
+      Ajouter:    techAndAbove(),
+      Modifier:   techAndAbove(),
+      Supprimer:  adminOnly(),
+    },
+  },
+  {
+    module: 'Réparations',
+    permissions: {
+      Consulter:  allCanView(),
+      Ajouter:    techAndAbove(),
+      Modifier:   techAndAbove(),
+      Supprimer:  adminOnly(),
+    },
+  },
+  {
+    module: 'Sociétés',
+    permissions: {
+      Consulter:  consultAndGestAndAdmin(),
+      Ajouter:    adminGestionnaire(),
+      Modifier:   adminGestionnaire(),
+      Supprimer:  adminOnly(),
+    },
+  },
+  {
+    module: 'Utilisateurs',
+    permissions: {
+      Consulter:  adminOnly(),
+      Ajouter:    adminOnly(),
+      Modifier:   adminOnly(),
+      Supprimer:  adminOnly(),
+    },
+  },
+]
+
+// ─── Role colors ──────────────────────────────────────────────
+
+const ROLE_HEADER_COLORS: Record<Role, string> = {
+  ADMIN:        'bg-red-50 text-red-700',
+  GESTIONNAIRE: 'bg-blue-50 text-blue-700',
+  TECHNICIEN:   'bg-orange-50 text-orange-700',
+  CONSULTANT:   'bg-gray-50 text-gray-600',
+}
+
+// ─── Page ─────────────────────────────────────────────────────
+
+export default async function ProfilsPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user) redirect('/login')
-
-  const userId = Number((session.user as any).id)
-  const user = await prisma.utilisateur.findUnique({ where: { id: userId } })
-  if (!user) redirect('/login')
-
-  const role = user.role as string
+  if ((session.user as any).role !== 'ADMIN') redirect('/acces-interdit')
 
   return (
     <>
-      <Header title="Mon profil" />
-      <main className="flex-1 p-6 max-w-2xl space-y-6">
+      <Header title="Profils &amp; Permissions" />
+      <main className="flex-1 p-6 space-y-5">
 
-        {searchParams.updated && (
-          <div className="p-3 bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg">
-            Mot de passe mis à jour avec succès.
+        {/* ── Header ───────────────────────────────────── */}
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Shield size={20} className="text-indigo-600" />
           </div>
-        )}
-
-        {/* Profile card */}
-        <div className="card">
-          <div className="flex items-start gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center text-white text-xl font-bold shadow-lg flex-shrink-0">
-              {user.prenom.charAt(0)}{user.nom.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-gray-900">
-                {user.prenom} {user.nom}
-              </h2>
-              <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                <span className={`badge ${ROLE_BADGE[role] ?? 'bg-gray-100 text-gray-600'}`}>
-                  {ROLE_LABELS[role] ?? role}
-                </span>
-                <span className={`badge ${user.actif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {user.actif ? 'Actif' : 'Inactif'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <User size={15} className="text-gray-400 flex-shrink-0" />
-              <div>
-                <p className="text-[10px] text-gray-400 uppercase font-semibold">Nom complet</p>
-                <p className="font-medium text-gray-800">{user.prenom} {user.nom}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <Mail size={15} className="text-gray-400 flex-shrink-0" />
-              <div>
-                <p className="text-[10px] text-gray-400 uppercase font-semibold">Adresse email</p>
-                <p className="font-medium text-gray-800">{user.email}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <Shield size={15} className="text-gray-400 flex-shrink-0" />
-              <div>
-                <p className="text-[10px] text-gray-400 uppercase font-semibold">Rôle</p>
-                <p className="font-medium text-gray-800">{ROLE_LABELS[role] ?? role}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-              <Calendar size={15} className="text-gray-400 flex-shrink-0" />
-              <div>
-                <p className="text-[10px] text-gray-400 uppercase font-semibold">Membre depuis</p>
-                <p className="font-medium text-gray-800">{formatDate(user.createdAt)}</p>
-              </div>
-            </div>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Profils &amp; Permissions</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Matrice des droits d&apos;accès par rôle et par module
+            </p>
           </div>
         </div>
 
-        {/* Change password */}
-        <div className="card">
-          <h3 className="text-base font-bold text-gray-900 mb-4">Changer le mot de passe</h3>
-          <form action={updatePassword} className="space-y-4">
-            <div>
-              <label className="label">Mot de passe actuel *</label>
-              <input name="currentPassword" type="password" required className="input" autoComplete="current-password" />
-            </div>
-            <div>
-              <label className="label">Nouveau mot de passe *</label>
-              <input name="newPassword" type="password" required minLength={6} className="input" autoComplete="new-password" />
-            </div>
-            <div>
-              <label className="label">Confirmer le nouveau mot de passe *</label>
-              <input name="confirmation" type="password" required minLength={6} className="input" autoComplete="new-password" />
-            </div>
-            <button type="submit" className="btn-primary">Mettre à jour</button>
-          </form>
+        {/* ── Matrix ───────────────────────────────────── */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                {/* Module + Action header */}
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider w-32">
+                    Module
+                  </th>
+                  <th className="px-3 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider w-28">
+                    Action
+                  </th>
+                  {ROLES.map((role) => (
+                    <th key={role} className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-wider">
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-semibold ${ROLE_HEADER_COLORS[role]}`}>
+                        {ROLE_LABELS[role]}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {MATRIX.map((item, moduleIdx) => (
+                  ACTIONS.map((action, actionIdx) => (
+                    <tr
+                      key={`${item.module}-${action}`}
+                      className={`
+                        border-b border-gray-50 transition-colors hover:bg-gray-50/50
+                        ${actionIdx === ACTIONS.length - 1 ? 'border-b-2 border-gray-100' : ''}
+                      `}
+                    >
+                      {/* Module name — only on first action row */}
+                      {actionIdx === 0 ? (
+                        <td
+                          rowSpan={ACTIONS.length}
+                          className="px-4 py-3 text-sm font-semibold text-gray-800 align-middle border-r border-gray-100"
+                        >
+                          {item.module}
+                        </td>
+                      ) : null}
+
+                      {/* Action */}
+                      <td className="px-3 py-2.5 text-xs text-gray-500 font-medium">
+                        {action}
+                      </td>
+
+                      {/* Permission cells */}
+                      {ROLES.map((role) => {
+                        const allowed = item.permissions[action][role]
+                        return (
+                          <td key={role} className="px-3 py-2.5 text-center">
+                            {allowed ? (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100">
+                                <span className="text-green-700 text-[10px] font-bold">✓</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100">
+                                <span className="text-gray-300 text-[10px] font-bold">✗</span>
+                              </span>
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Legend ───────────────────────────────────── */}
+        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+          <span className="font-semibold text-gray-700">Légende :</span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100">
+              <span className="text-green-700 text-[9px] font-bold">✓</span>
+            </span>
+            Autorisé
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100">
+              <span className="text-gray-300 text-[9px] font-bold">✗</span>
+            </span>
+            Non autorisé
+          </span>
+          <span className="text-gray-300">·</span>
+          <span className="text-gray-400">
+            Ces permissions sont définies par rôle et s&apos;appliquent à tous les utilisateurs du rôle correspondant.
+          </span>
         </div>
 
       </main>
