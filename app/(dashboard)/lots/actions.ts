@@ -53,6 +53,25 @@ export async function deleteLot(
   }
 }
 
+export async function updateLot(id: number, formData: FormData) {
+  const role = await getSessionRole()
+  if (!canDo(role, 'lots', 'modifier')) redirect('/acces-interdit')
+
+  const numero         = (formData.get('numero') as string).trim()
+  const nom            = (formData.get('nom') as string).trim()
+  const acquisitionId  = parseInt(formData.get('acquisitionId') as string)
+  const societeId      = parseInt(formData.get('societeId') as string)
+  const montant        = parseFloat(formData.get('montant') as string)
+  const nombreArticles = parseInt(formData.get('nombreArticles') as string)
+
+  await prisma.lot.update({
+    where: { id },
+    data: { numero, nom, acquisitionId, societeId, montant, nombreArticles },
+  })
+  revalidatePath('/lots')
+  redirect(`/lots/${id}`)
+}
+
 export async function createSociete(data: {
   nom: string
   telephone?: string

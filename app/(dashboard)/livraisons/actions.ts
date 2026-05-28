@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { canDo, getSessionRole } from '@/lib/permissions'
 
 export async function createLivraison(
@@ -30,6 +31,23 @@ export async function createLivraison(
   } catch {
     return { success: false, error: 'Une erreur est survenue lors de la création.' }
   }
+}
+
+export async function updateLivraison(id: number, formData: FormData) {
+  const role = await getSessionRole()
+  if (!canDo(role, 'livraisons', 'modifier')) redirect('/acces-interdit')
+
+  const lotId          = parseInt(formData.get('lotId') as string)
+  const numeroBL       = (formData.get('numeroBL') as string).trim()
+  const dateLivraison  = new Date(formData.get('dateLivraison') as string)
+  const articleLivre   = formData.get('articleLivre') === 'oui'
+
+  await prisma.livraison.update({
+    where: { id },
+    data: { lotId, numeroBL, dateLivraison, articleLivre },
+  })
+  revalidatePath('/livraisons')
+  redirect('/livraisons')
 }
 
 export async function deleteLivraison(

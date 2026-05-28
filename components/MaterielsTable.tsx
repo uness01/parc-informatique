@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Eye, UserPlus, Wrench, Monitor } from 'lucide-react'
+import { Eye, Pencil, UserPlus, Wrench, Monitor } from 'lucide-react'
 import { STATUT_MATERIEL_LABELS, STATUT_MATERIEL_COLORS, TYPE_ACQUISITION_LABELS } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────
@@ -27,10 +27,12 @@ export type MaterielRow = {
 
 export function MaterielsTable({
   data,
+  canModifier           = true,
   canAjouterAffectation = true,
   canAjouterPanne       = true,
 }: {
   data: MaterielRow[]
+  canModifier?:          boolean
   canAjouterAffectation?: boolean
   canAjouterPanne?:       boolean
 }) {
@@ -40,9 +42,11 @@ export function MaterielsTable({
         <Monitor size={44} className="opacity-20" />
         <p className="text-sm font-medium">Aucun matériel trouvé</p>
         <p className="text-xs">Modifiez vos filtres ou ajoutez un matériel</p>
-        <Link href="/materiels/nouveau" className="btn-primary mt-2">
-          + Nouveau matériel
-        </Link>
+        {canModifier && (
+          <Link href="/materiels/nouveau" className="btn-primary mt-2">
+            + Nouveau matériel
+          </Link>
+        )}
       </div>
     )
   }
@@ -122,6 +126,16 @@ export function MaterielsTable({
                       <Eye size={13} />
                       <span className="hidden xl:inline">Voir</span>
                     </Link>
+                    {canModifier && (
+                      <Link
+                        href={`/materiels/${m.id}/modifier`}
+                        className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
+                        title="Modifier"
+                      >
+                        <Pencil size={13} />
+                        <span className="hidden xl:inline">Modifier</span>
+                      </Link>
+                    )}
                     {canAjouterAffectation && (
                       <Link
                         href={`/affectations/nouvelle?materielId=${m.id}`}

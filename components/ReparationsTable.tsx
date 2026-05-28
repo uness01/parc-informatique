@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, Check, Trash2, X, Wrench } from 'lucide-react'
+import { AlertCircle, Check, Eye, Pencil, Trash2, X, Wrench } from 'lucide-react'
 import {
   STATUT_REPARATION_LABELS, STATUT_REPARATION_COLORS,
   formatDate, formatCurrency,
@@ -291,20 +291,36 @@ export function ReparationsTable({
                             <X size={10} />
                           </button>
                         </div>
-                      ) : canSupprimer ? (
-                        <div className="flex items-center justify-end">
-                          <button
-                            onClick={(e) => handleDeleteClick(e, r.id)}
-                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={13} />
-                            <span className="hidden xl:inline">Supprimer</span>
-                          </button>
-                        </div>
                       ) : (
-                        <div className="flex items-center justify-end">
-                          <span className="text-xs text-gray-300">—</span>
+                        <div className="flex items-center justify-end gap-0.5">
+                          <Link
+                            href={`/reparations/${r.id}`}
+                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                            title="Voir le détail"
+                          >
+                            <Eye size={13} />
+                            <span className="hidden xl:inline">Voir</span>
+                          </Link>
+                          {canModifier && (
+                            <Link
+                              href={`/reparations/${r.id}/modifier`}
+                              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
+                              title="Modifier"
+                            >
+                              <Pencil size={13} />
+                              <span className="hidden xl:inline">Modifier</span>
+                            </Link>
+                          )}
+                          {canSupprimer && (
+                            <button
+                              onClick={(e) => handleDeleteClick(e, r.id)}
+                              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={13} />
+                              <span className="hidden xl:inline">Supprimer</span>
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>

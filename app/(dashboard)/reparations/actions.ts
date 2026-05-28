@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { canDo, getSessionRole } from '@/lib/permissions'
 
 export async function createReparation(
@@ -84,6 +85,39 @@ export async function createReparation(
     }
     return { success: false, error: 'Une erreur est survenue lors de la création.' }
   }
+}
+
+export async function updateReparation(id: number, formData: FormData) {
+  const role = await getSessionRole()
+  if (!canDo(role, 'reparations', 'modifier')) redirect('/acces-interdit')
+
+  const codeBon         = (formData.get('codeBon') as string).trim()
+  const typeMaintenance = formData.get('typeMaintenance') as string
+  const statut          = formData.get('statut') as string
+  const dateDebutRaw    = formData.get('dateDebut') as string
+  const dateFinRaw      = formData.get('dateFin') as string
+  const coutRaw         = formData.get('cout') as string
+  const rapport         = (formData.get('rapport') as string)?.trim() || null
+
+  try {
+    await prisma.reparation.update({
+      where: { id },
+      data: {
+        codeBon,
+        typeMaintenance: typeMaintenance as any,
+        statut:          statut as any,
+        dateDebut:       new Date(dateDebutRaw),
+        dateFin:         dateFinRaw ? new Date(dateFinRaw) : null,
+        cout:            coutRaw ? parseFloat(coutRaw) : null,
+        rapport,
+      },
+    })
+  } catch (e: any) {
+    if (e?.code === 'P2002') redirect(`/reparations/${id}/modifier?error=Code+bon+déjà+utilisé`)
+    throw e
+  }
+  revalidatePath('/reparations')
+  redirect(`/reparations/${id}`)
 }
 
 export async function updateReparationStatut(

@@ -50,6 +50,28 @@ export async function deleteArticle(
   }
 }
 
+export async function updateArticle(id: number, formData: FormData) {
+  const role = await getSessionRole()
+  if (!canDo(role, 'articles', 'modifier')) redirect('/acces-interdit')
+
+  const numero         = (formData.get('numero') as string).trim()
+  const designation    = (formData.get('designation') as string).trim()
+  const marque         = (formData.get('marque') as string).trim()
+  const modele         = (formData.get('modele') as string).trim()
+  const lotId          = parseInt(formData.get('lotId') as string)
+  const nombreMateriel = parseInt(formData.get('nombreMateriel') as string)
+  const prixUnitaire   = parseFloat(formData.get('prixUnitaire') as string)
+  const dateRaw        = (formData.get('dateFinGarantie') as string).trim()
+  const dateFinGarantie = dateRaw ? new Date(dateRaw) : null
+
+  await prisma.article.update({
+    where: { id },
+    data: { numero, designation, marque, modele, lotId, nombreMateriel, prixUnitaire, dateFinGarantie },
+  })
+  revalidatePath('/articles')
+  redirect(`/articles/${id}/caracteristiques`)
+}
+
 export async function addCaracteristique(
   articleId: number,
   nom: string,

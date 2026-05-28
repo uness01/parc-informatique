@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  AlertCircle, Check, Eye, Trash2, X, Wrench,
+  AlertCircle, Check, Eye, Pencil, Trash2, X, Wrench,
 } from 'lucide-react'
 import {
   STATUT_PANNE_LABELS, STATUT_PANNE_COLORS,
@@ -240,6 +240,16 @@ export function PannesTable({
                             <Eye size={13} />
                             <span className="hidden xl:inline">Voir</span>
                           </Link>
+                          {canModifier && (
+                            <Link
+                              href={`/pannes/${p.id}/modifier`}
+                              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-medium text-green-700 hover:bg-green-50 transition-colors"
+                              title="Modifier"
+                            >
+                              <Pencil size={13} />
+                              <span className="hidden xl:inline">Modifier</span>
+                            </Link>
+                          )}
                           {canSupprimer && (
                             <button
                               onClick={(e) => handleDeleteClick(e, p.id)}

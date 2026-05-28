@@ -31,6 +31,7 @@ export default async function MaterielsPage({
   const session = await getServerSession(authOptions)
   const role = (session?.user as any)?.role ?? 'CONSULTANT'
   const canAjouter          = canDo(role, 'materiels', 'ajouter')
+  const canModifier         = canDo(role, 'materiels', 'modifier')
   const canAjouterAffect    = canDo(role, 'affectations', 'ajouter')
   const canAjouterPanne     = canDo(role, 'pannes', 'ajouter')
 
@@ -258,7 +259,7 @@ export default async function MaterielsPage({
         </div>
 
         {/* ── Table ────────────────────────────────────── */}
-        <MaterielsTable data={rows} canAjouterAffectation={canAjouterAffect} canAjouterPanne={canAjouterPanne} />
+        <MaterielsTable data={rows} canModifier={canModifier} canAjouterAffectation={canAjouterAffect} canAjouterPanne={canAjouterPanne} />
 
       </main>
     </>

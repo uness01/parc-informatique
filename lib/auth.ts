@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -46,6 +47,11 @@ export const authOptions: NextAuthOptions = {
         ;(session.user as any).role = token.role
       }
       return session
+    },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) return url
+      if (url.startsWith(baseUrl)) return url
+      return '/dashboard'
     },
   },
   pages: { signIn: '/login' },

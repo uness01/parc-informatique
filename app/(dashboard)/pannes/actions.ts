@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { canDo, getSessionRole } from '@/lib/permissions'
 
 export async function createPanne(
@@ -56,6 +57,28 @@ export async function createPanne(
   } catch {
     return { success: false, error: 'Une erreur est survenue lors de la création.' }
   }
+}
+
+export async function updatePanne(id: number, formData: FormData) {
+  const role = await getSessionRole()
+  if (!canDo(role, 'pannes', 'modifier')) redirect('/acces-interdit')
+
+  const description = (formData.get('description') as string).trim()
+  const priorite    = formData.get('priorite') as string
+  const statut      = formData.get('statut') as string
+  const dateRaw     = formData.get('date') as string
+
+  await prisma.panne.update({
+    where: { id },
+    data: {
+      description,
+      priorite: priorite as any,
+      statut:   statut as any,
+      ...(dateRaw ? { date: new Date(dateRaw) } : {}),
+    },
+  })
+  revalidatePath('/pannes')
+  redirect(`/pannes/${id}`)
 }
 
 export async function updatePanneStatut(

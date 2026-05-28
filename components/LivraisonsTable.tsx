@@ -79,9 +79,11 @@ export function LivraisonsTable({
         <Truck size={44} className="opacity-20" />
         <p className="text-sm font-medium">Aucune livraison trouvée</p>
         <p className="text-xs">Modifiez vos filtres ou ajoutez une livraison</p>
-        <Link href="/livraisons/nouveau" className="btn-primary mt-2">
-          + Ajouter une livraison
-        </Link>
+        {canModifier && (
+          <Link href="/livraisons/nouveau" className="btn-primary mt-2">
+            + Ajouter une livraison
+          </Link>
+        )}
       </div>
     )
   }
