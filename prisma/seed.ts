@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { hash as bcryptHash } from '@node-rs/bcrypt'
+import { hash as bcryptHash } from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
