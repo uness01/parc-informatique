@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import bcrypt from 'bcryptjs'
+import { hash } from '@node-rs/bcrypt'
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions)
@@ -38,7 +38,7 @@ export async function createUtilisateur(
       return { success: false, error: 'Le mot de passe doit comporter au moins 6 caractères.' }
     }
 
-    const hashed = await bcrypt.hash(password, 10)
+    const hashed = await hash(password, 10)
 
     await prisma.utilisateur.create({
       data: { nom, prenom, email, login, password: hashed, role: role as any, actif },
@@ -73,7 +73,7 @@ export async function updateUtilisateur(
       if (newPassword.length < 6) {
         return { success: false, error: 'Le mot de passe doit comporter au moins 6 caractères.' }
       }
-      data.password = await bcrypt.hash(newPassword, 10)
+      data.password = await hash(newPassword, 10)
     }
 
     await prisma.utilisateur.update({ where: { id }, data })

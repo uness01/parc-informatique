@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { hash as bcryptHash } from '@node-rs/bcrypt'
 
 const prisma = new PrismaClient()
 
@@ -19,10 +19,10 @@ async function main() {
 
   // ─── Utilisateurs (1 par rôle) ────────────────────────────────
   const [passAdmin, passGest, passTech, passConsult] = await Promise.all([
-    bcrypt.hash('Admin@2024', 10),
-    bcrypt.hash('Gest@2024', 10),
-    bcrypt.hash('Tech@2024', 10),
-    bcrypt.hash('Consult@2024', 10),
+    bcryptHash('Admin@2024', 10),
+    bcryptHash('Gest@2024', 10),
+    bcryptHash('Tech@2024', 10),
+    bcryptHash('Consult@2024', 10),
   ])
 
   const admin = await prisma.utilisateur.upsert({
