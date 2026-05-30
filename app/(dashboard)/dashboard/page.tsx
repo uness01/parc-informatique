@@ -2,6 +2,7 @@ import { Header } from '@/components/Header'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { canDo } from '@/lib/permissions'
 import Link from 'next/link'
 import {
   Monitor, ShoppingCart, AlertTriangle, Shield,
@@ -147,6 +148,7 @@ export default async function DashboardPage() {
   ])
 
   const firstName = session?.user?.name?.split(' ')[0] ?? 'Utilisateur'
+  const role = (session?.user as any)?.role ?? 'CONSULTANT'
 
   return (
     <>
@@ -459,14 +461,16 @@ export default async function DashboardPage() {
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-3 bg-gray-50 border-t border-gray-100">
-              <Link
-                href="/pannes/nouvelle"
-                className="text-xs font-semibold text-green-700 hover:text-green-900"
-              >
-                + Déclarer une panne
-              </Link>
-            </div>
+            {canDo(role, 'pannes', 'ajouter') && (
+              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100">
+                <Link
+                  href="/pannes/nouvelle"
+                  className="text-xs font-semibold text-green-700 hover:text-green-900"
+                >
+                  + Déclarer une panne
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Recent affectations */}
@@ -537,14 +541,16 @@ export default async function DashboardPage() {
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-3 bg-gray-50 border-t border-gray-100">
-              <Link
-                href="/affectations/nouvelle"
-                className="text-xs font-semibold text-green-700 hover:text-green-900"
-              >
-                + Nouvelle affectation
-              </Link>
-            </div>
+            {canDo(role, 'affectations', 'ajouter') && (
+              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100">
+                <Link
+                  href="/affectations/nouvelle"
+                  className="text-xs font-semibold text-green-700 hover:text-green-900"
+                >
+                  + Nouvelle affectation
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 
