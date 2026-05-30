@@ -75,7 +75,7 @@ export default async function PrintAffectationPage({
           Royaume du Maroc
         </div>
         <div className="font-bold text-base leading-tight">
-          Ministère de l&apos;Énergie, des Mines, de l&apos;Eau et de l&apos;Environnement
+          Ministère de la Transition Énergétique et du Développement Durable
         </div>
         <div className="text-xs text-gray-500 mt-0.5">
           Direction du Système d&apos;Information

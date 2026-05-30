@@ -68,7 +68,7 @@ export function Header({ title }: { title?: string }) {
         {/* Ministry name — hidden on small screens */}
         <div className="hidden md:block min-w-0">
           <p className="text-[11px] font-bold text-green-800 leading-tight truncate">
-            Ministère de l&apos;Énergie, des Mines, de l&apos;Eau et de l&apos;Environnement
+            Ministère de la Transition Énergétique et du Développement Durable
           </p>
           <p className="text-[10px] text-green-600 font-medium">
             Gestion du Parc Informatique

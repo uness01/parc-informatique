@@ -116,7 +116,7 @@ export function UtilisateurForm({
           type="email"
           required
           className="input"
-          placeholder="m.alami@exemple.ma"
+          placeholder="m.alami@mem.gov.ma"
           defaultValue={defaultValues?.email}
         />
       </div>

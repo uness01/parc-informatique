@@ -6,8 +6,8 @@ import { Providers } from '@/components/Providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "GPI — Ministère de l'Énergie",
-  description: "Gestion du Parc Informatique — Ministère de l'Énergie, des Mines, de l'Eau et de l'Environnement",
+  title: "GPI — Ministère de la Transition Énergétique",
+  description: "Gestion du Parc Informatique — Ministère de la Transition Énergétique et du Développement Durable",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -299,8 +299,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         </button>
         </div>
         <p className="mt-2.5 text-[10px] text-green-500 leading-relaxed">
-          Ministère de l&apos;Énergie, des Mines,
-          <br />de l&apos;Eau et de l&apos;Environnement
+          Ministère de la Transition Énergétique
+          <br />et du Développement Durable
         </p>
       </div>
 

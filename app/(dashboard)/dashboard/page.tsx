@@ -170,7 +170,7 @@ export default async function DashboardPage() {
                 Bonjour, {firstName}&nbsp;👋
               </h2>
               <p className="text-green-200 text-sm mt-1.5 max-w-lg leading-relaxed">
-                Ministère de l&apos;Énergie, des Mines, de l&apos;Eau et de l&apos;Environnement
+                Ministère de la Transition Énergétique et du Développement Durable
                 &nbsp;—&nbsp; Gestion du Parc Informatique
               </p>
             </div>

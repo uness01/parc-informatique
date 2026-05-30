@@ -58,8 +58,8 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-white mb-3">Gestion du Parc Informatique</h1>
           <div className="w-16 h-1 bg-green-400 mx-auto mb-4" />
           <p className="text-green-200 text-sm leading-relaxed">
-            Ministère de l'Énergie, des Mines,<br />
-            de l'Eau et de l'Environnement
+            Ministère de la Transition Énergétique<br />
+            et du Développement Durable
           </p>
           <p className="text-green-300 text-xs mt-4 font-medium">Royaume du Maroc</p>
         </div>
@@ -76,7 +76,7 @@ export default function LoginPage() {
               <Monitor size={28} className="text-white" />
             </div>
             <h2 className="text-xl font-bold text-gray-900">Gestion du Parc Informatique</h2>
-            <p className="text-xs text-gray-500 mt-1">Ministère de l'Énergie, des Mines, de l'Eau et de l'Environnement</p>
+            <p className="text-xs text-gray-500 mt-1">Ministère de la Transition Énergétique et du Développement Durable</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
@@ -99,7 +99,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="input pl-9"
-                    placeholder="exemple@energie.gov.ma"
+                    placeholder="exemple@mem.gov.ma"
                     required
                     autoComplete="email"
                   />

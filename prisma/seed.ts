@@ -16,6 +16,7 @@ async function main() {
   await prisma.lot.deleteMany({})
   await prisma.acquisition.deleteMany({})
   await prisma.societe.deleteMany({})
+  await prisma.utilisateur.deleteMany({})
 
   // ─── Utilisateurs (1 par rôle) ────────────────────────────────
   const [passAdmin, passGest, passTech, passConsult] = await Promise.all([
@@ -26,24 +27,24 @@ async function main() {
   ])
 
   const admin = await prisma.utilisateur.upsert({
-    where: { email: 'admin@energie.gov.ma' },
+    where: { email: 'admin@mem.gov.ma' },
     update: { password: passAdmin, role: 'ADMIN', actif: true },
-    create: { nom: 'Administrateur', prenom: 'Système', email: 'admin@energie.gov.ma', password: passAdmin, role: 'ADMIN', actif: true },
+    create: { nom: 'Administrateur', prenom: 'Système', email: 'admin@mem.gov.ma', password: passAdmin, role: 'ADMIN', actif: true },
   })
   const gestionnaire = await prisma.utilisateur.upsert({
-    where: { email: 'gestionnaire@energie.gov.ma' },
+    where: { email: 'gestionnaire@mem.gov.ma' },
     update: { password: passGest, role: 'GESTIONNAIRE', actif: true },
-    create: { nom: 'Benali', prenom: 'Karim', email: 'gestionnaire@energie.gov.ma', password: passGest, role: 'GESTIONNAIRE', actif: true },
+    create: { nom: 'Benali', prenom: 'Karim', email: 'gestionnaire@mem.gov.ma', password: passGest, role: 'GESTIONNAIRE', actif: true },
   })
   const technicien = await prisma.utilisateur.upsert({
-    where: { email: 'technicien@energie.gov.ma' },
+    where: { email: 'technicien@mem.gov.ma' },
     update: { password: passTech, role: 'TECHNICIEN', actif: true },
-    create: { nom: 'Tahiri', prenom: 'Youssef', email: 'technicien@energie.gov.ma', password: passTech, role: 'TECHNICIEN', actif: true },
+    create: { nom: 'Tahiri', prenom: 'Youssef', email: 'technicien@mem.gov.ma', password: passTech, role: 'TECHNICIEN', actif: true },
   })
   const consultant = await prisma.utilisateur.upsert({
-    where: { email: 'consultant@energie.gov.ma' },
+    where: { email: 'consultant@mem.gov.ma' },
     update: { password: passConsult, role: 'CONSULTANT', actif: true },
-    create: { nom: 'Idrissi', prenom: 'Sara', email: 'consultant@energie.gov.ma', password: passConsult, role: 'CONSULTANT', actif: true },
+    create: { nom: 'Idrissi', prenom: 'Sara', email: 'consultant@mem.gov.ma', password: passConsult, role: 'CONSULTANT', actif: true },
   })
 
   // ─── Sociétés ─────────────────────────────────────────────────
@@ -181,10 +182,10 @@ async function main() {
   console.log('═══════════════════════════════════════════════════════════════')
   console.log('  Rôle           Email                           Mot de passe')
   console.log('  ─────────────────────────────────────────────────────────────')
-  console.log('  ADMIN          admin@energie.gov.ma            Admin@2024')
-  console.log('  GESTIONNAIRE   gestionnaire@energie.gov.ma     Gest@2024')
-  console.log('  TECHNICIEN     technicien@energie.gov.ma       Tech@2024')
-  console.log('  CONSULTANT     consultant@energie.gov.ma       Consult@2024')
+  console.log('  ADMIN          admin@mem.gov.ma            Admin@2024')
+  console.log('  GESTIONNAIRE   gestionnaire@mem.gov.ma     Gest@2024')
+  console.log('  TECHNICIEN     technicien@mem.gov.ma       Tech@2024')
+  console.log('  CONSULTANT     consultant@mem.gov.ma       Consult@2024')
   console.log('═══════════════════════════════════════════════════════════════\n')
   console.log('  Données créées :')
   console.log('  • 4 utilisateurs (1 par rôle)')
