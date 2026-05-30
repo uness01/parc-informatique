@@ -9,9 +9,11 @@ export const metadata: Metadata = {
   title: "GPI — Ministère de la Transition Énergétique",
   description: "Gestion du Parc Informatique — Ministère de la Transition Énergétique et du Développement Durable",
   icons: {
-    icon: '/logo-maroc.png',
-    shortcut: '/logo-maroc.png',
-    apple: '/logo-maroc.png',
+    icon: [
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
   },
 }
 
